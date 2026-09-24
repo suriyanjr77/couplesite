@@ -885,14 +885,14 @@
 
 
 <!-- MODAL -->
-<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)requestCloseModal()">
   <div class="modal-box">
     <div class="modal-head">
       <div class="modal-head-text"><div class="modal-date" id="modalDate"></div><div class="modal-title" id="modalTitle"></div></div>
       <div class="modal-head-actions">
         <button type="button" class="modal-action-btn" id="modalEditBtn" onclick="editCurrentPost()" style="display:none;" title="Edit">✏️</button>
         <button type="button" class="modal-action-btn" id="modalDeleteBtn" onclick="deleteCurrentItem()" title="Delete">🗑️</button>
-        <button class="modal-close" onclick="closeModal()">&times;</button>
+        <button class="modal-close" onclick="requestCloseModal()">&times;</button>
       </div>
     </div>
     <div class="modal-frame-wrap" id="modalFrameWrap"></div>
@@ -1063,10 +1063,15 @@ function enterApp(){
   document.getElementById('postDate').value = today.toISOString().slice(0,10);
   document.getElementById('albumDate').value = today.toISOString().slice(0,10);
   applySettingsToBrand();
+  history.replaceState({ view:'memories' }, '', '#memories');
   switchView('memories');
   renderNotifBadge();
 }
+let suppressHistoryPush = false;
+let currentViewName = 'memories';
+
 function switchView(view){
+  currentViewName = view;
   ['memories','newpost','activity','album','timeline','milestones','calendar','allphotos','capsules','bucketlist','daily','settings'].forEach(v=>{
     document.getElementById('view-'+v).style.display = v===view ? 'block' : 'none';
   });
@@ -1091,6 +1096,13 @@ function switchView(view){
   if(view==='bucketlist') renderBucketList();
   if(view==='daily') renderDailyQuestion();
   if(view==='settings') renderSettings();
+
+  if(!suppressHistoryPush){
+    const cur = history.state;
+    if(!cur || cur.view !== view || cur.modalId){
+      history.pushState({ view }, '', '#'+view);
+    }
+  }
 }
 
 /* ===================================================================
@@ -1258,10 +1270,21 @@ function openModal(item){
   renderModalNotes(item);
   document.getElementById('modalEditBtn').style.display = item.type==='post' ? 'inline-flex' : 'none';
   document.getElementById('modalOverlay').classList.add('open');
+  if(!suppressHistoryPush){
+    history.pushState({ view: currentViewName, modalId:item.id, modalType:item.type }, '', '#'+currentViewName+'/'+item.type+'/'+item.id);
+  }
 }
 function closeModal(){
   document.getElementById('modalOverlay').classList.remove('open');
   currentModalItem = null;
+}
+function requestCloseModal(){
+  const st = history.state;
+  if(st && st.modalId){ history.back(); }
+  else { closeModal(); }
+}
+function findItemById(type, id){
+  return loadJSON(getStoreKeyForType(type), []).find(x=>x.id===id);
 }
 function deleteCurrentItem(){
   if(!currentModalItem) return;
@@ -3589,6 +3612,27 @@ function checkInviteFromUrl(){
   }
   switchAuthTab('register');
 }
+
+/* ===================================================================
+   BROWSER BACK / FORWARD NAVIGATION
+=================================================================== */
+window.addEventListener('popstate', (e)=>{
+  if(document.getElementById('appScreen').style.display !== 'block') return; // not logged in yet — let the browser behave normally
+  suppressHistoryPush = true;
+  const state = e.state;
+  if(state && state.modalId){
+    switchView(state.view);
+    const item = findItemById(state.modalType, state.modalId);
+    if(item){ openModal(item); } else { closeModal(); }
+  } else if(state && state.view){
+    closeModal();
+    switchView(state.view);
+  } else {
+    closeModal();
+    switchView('memories');
+  }
+  suppressHistoryPush = false;
+});
 
 /* ===================================================================
    BOOT
