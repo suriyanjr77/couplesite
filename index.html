@@ -3387,7 +3387,8 @@ function renderAppThemeRow(){
 =================================================================== */
 let sidebarPinned = false;
 function updateSidebarPin(view){
-  sidebarPinned = (view === 'memories');
+  const isDesktop = window.matchMedia('(min-width: 861px)').matches;
+  sidebarPinned = isDesktop ? true : (view === 'memories');
   const sidebar = document.getElementById('mainSidebar');
   const appScreen = document.getElementById('appScreen');
   if(!sidebar) return;
