@@ -1,0 +1,3611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Us. — a private journal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,500&family=Karla:wght@400;500;600;700&family=Patrick+Hand&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#211A24; --ink-2:#2C232F; --ink-3:#382D3D;
+    --paper:#F3ECDD; --paper-2:#EAE0C8;
+    --rose:#C17B84; --rose-deep:#9C5C68; --gold:#C7A15A;
+    --text-on-ink:#EDE6E0; --text-muted-on-ink:#A79CAA;
+    --text-on-paper:#2B2230; --text-muted-on-paper:#6E6270;
+    --serif:'Fraunces',Georgia,'Iowan Old Style',serif;
+    --sans:'Karla',-apple-system,'Segoe UI',Roboto,sans-serif;
+    --shadow: 0 18px 40px -18px rgba(20,14,22,.55);
+  }
+  :root:not([data-theme="light"]){ --ink:#211A24; --paper:#F3ECDD; }
+  :root[data-theme="dark"]{ --ink:#211A24; --paper:#F3ECDD; }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--ink);color:var(--text-on-ink);font-family:var(--sans);min-height:100vh;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;}
+  button{font-family:inherit;}
+  ::selection{background:var(--rose);color:var(--ink);}
+
+  /* ---------- AUTH SCREEN ---------- */
+  #authScreen{min-height:100vh;display:grid;grid-template-columns:1fr 1fr;}
+  .auth-left{
+    background:radial-gradient(ellipse at 20% 15%, rgba(193,123,132,.18), transparent 55%),
+      radial-gradient(ellipse at 80% 85%, rgba(199,161,90,.12), transparent 50%), var(--ink);
+    padding:64px 56px;display:flex;flex-direction:column;justify-content:space-between;
+  }
+  .auth-mark{font-family:var(--serif);font-weight:600;font-style:italic;font-size:15px;letter-spacing:.04em;color:var(--gold);}
+  .auth-hero h1{font-family:var(--serif);font-weight:500;font-size:clamp(48px,7vw,84px);line-height:1.02;margin:0 0 22px;}
+  .auth-hero p{font-size:17px;line-height:1.6;color:var(--text-muted-on-ink);max-width:38ch;margin:0;}
+  .auth-quote{font-family:var(--serif);font-style:italic;font-size:15px;color:var(--text-muted-on-ink);border-left:2px solid var(--rose-deep);padding-left:16px;max-width:34ch;}
+  .auth-right{background:var(--paper);color:var(--text-on-paper);display:flex;align-items:center;justify-content:center;padding:48px;}
+  .auth-form-wrap{width:100%;max-width:360px;}
+  .auth-tabs{display:flex;gap:24px;margin-bottom:34px;border-bottom:1px solid var(--paper-2);}
+  .auth-tab{background:none;border:none;cursor:pointer;font-family:var(--serif);font-size:19px;font-weight:500;color:var(--text-muted-on-paper);padding:0 0 14px;border-bottom:2px solid transparent;}
+  .auth-tab.active{color:var(--text-on-paper);border-bottom-color:var(--rose);}
+  .field{margin-bottom:18px;}
+  .field label{display:block;font-size:12.5px;font-weight:600;color:var(--text-muted-on-paper);margin-bottom:7px;}
+  .field input{width:100%;padding:11px 13px;border:1px solid var(--paper-2);background:#fff;border-radius:3px;font-family:var(--sans);font-size:15px;color:var(--text-on-paper);}
+  .field input:focus{outline:2px solid var(--rose);outline-offset:1px;}
+  .btn-primary{width:100%;padding:13px;margin-top:6px;background:var(--rose-deep);color:#fff;border:none;border-radius:3px;font-size:15px;font-weight:600;cursor:pointer;}
+  .btn-primary:hover{background:var(--ink);}
+  .auth-error{color:#A6404F;font-size:13.5px;margin:-6px 0 16px;min-height:1em;}
+  .auth-hint{margin-top:22px;font-size:12.5px;color:var(--text-muted-on-paper);background:var(--paper-2);padding:10px 12px;border-radius:3px;}
+  .invite-banner{background:#FBEFF0;border:1px solid var(--rose);border-radius:6px;padding:12px 14px;margin-bottom:20px;font-size:13px;color:var(--rose-deep);font-weight:600;line-height:1.4;}
+  .invite-link-row{display:flex;gap:8px;margin-bottom:10px;}
+  .invite-link-row input{flex:1;padding:9px 12px;border:1px solid var(--paper-2);border-radius:6px;font-family:var(--sans);font-size:12.5px;background:var(--paper);color:var(--text-on-paper);}
+  .invite-accepted{background:#EAF6EE;border:1px solid #7FB69E;border-radius:6px;padding:10px 14px;font-size:13px;color:#2F6B4F;font-weight:600;margin-bottom:10px;}
+  .auth-hint b{color:var(--text-on-paper);}
+
+  /* ---------- APP SHELL ---------- */
+  #appScreen{display:none;min-height:100vh;}
+  .sidebar-hover-zone{position:fixed;top:0;left:0;width:14px;height:100vh;z-index:49;background:linear-gradient(to right, rgba(193,123,132,.4), transparent);cursor:pointer;}
+  .sidebar{
+    position:fixed;top:0;left:-240px;width:230px;height:100vh;
+    background:var(--ink);padding:30px 22px;display:flex;flex-direction:column;
+    border-right:1px solid var(--ink-3);z-index:50;transition:left .25s ease;
+    box-shadow:10px 0 30px rgba(0,0,0,.4);
+  }
+  .sidebar.visible{left:0;}
+  .brand{font-family:var(--serif);font-style:italic;font-weight:600;font-size:24px;color:var(--paper);margin-bottom:22px;}
+  .notif-bell-wrap{position:relative;margin-bottom:26px;}
+  .notif-bell-btn{background:var(--ink-2);border:1px solid var(--ink-3);color:var(--text-on-ink);border-radius:20px;padding:9px 14px;font-size:12.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;width:100%;justify-content:center;}
+  .notif-bell-btn:hover{border-color:var(--rose-deep);}
+  .notif-badge{background:var(--rose-deep);color:#fff;font-size:10px;font-weight:700;border-radius:20px;padding:1px 6px;min-width:16px;text-align:center;}
+  .notif-panel{position:absolute;left:100%;top:0;margin-left:10px;width:290px;max-height:70vh;overflow-y:auto;background:#fff;border-radius:8px;box-shadow:var(--shadow);z-index:60;padding:6px;}
+  .notif-panel-head{display:flex;justify-content:space-between;align-items:center;padding:8px 8px 10px;border-bottom:1px solid var(--paper-2);margin-bottom:4px;font-size:11px;font-weight:700;color:var(--text-muted-on-paper);letter-spacing:.05em;}
+  .notif-panel-head button{background:none;border:none;color:var(--rose-deep);font-weight:600;cursor:pointer;font-size:11px;}
+  .notif-item{display:flex;gap:10px;align-items:flex-start;padding:10px 8px;border-radius:6px;cursor:pointer;}
+  .notif-item:hover{background:var(--paper);}
+  .notif-item.unread{background:#FBEFF0;}
+  .notif-item .notif-icon{font-size:16px;flex:none;line-height:1.3;}
+  .notif-item .notif-text{flex:1;line-height:1.4;font-size:12.5px;color:var(--text-on-paper);}
+  .notif-item .notif-time{font-size:10.5px;color:var(--text-muted-on-paper);margin-top:2px;}
+  .notif-empty{padding:20px 10px;text-align:center;color:var(--text-muted-on-paper);font-family:var(--serif);font-style:italic;font-size:13px;}
+  .nav{list-style:none;margin:0;padding:0;flex:1;}
+  .nav li{margin-bottom:4px;}
+  .nav button{width:100%;text-align:left;background:none;border:none;cursor:pointer;color:var(--text-muted-on-ink);font-size:14.5px;font-weight:600;padding:11px 12px;border-radius:4px;display:flex;align-items:center;gap:10px;}
+  .nav button .num{font-family:var(--serif);font-style:italic;color:var(--gold);font-weight:500;}
+  .nav button:hover{background:var(--ink-2);color:var(--text-on-ink);}
+  .nav button.active{background:var(--ink-2);color:var(--text-on-ink);}
+  .nav button.active .num{color:var(--rose);}
+  .sidebar-foot{border-top:1px solid var(--ink-3);padding-top:16px;}
+  .export-status{font-size:11px;color:var(--gold);margin-bottom:10px;min-height:1em;}
+
+  /* ---------- SPOTIFY MOOD PANEL ---------- */
+  .spotify-panel{background:#fff;border:1px solid var(--paper-2);border-radius:8px;padding:14px 16px;margin-bottom:22px;}
+  .otd-banner{display:flex;align-items:center;gap:12px;background:linear-gradient(120deg, var(--paper-2), var(--paper));border:1px solid var(--rose);border-radius:8px;padding:14px 18px;margin-bottom:22px;cursor:pointer;}
+  .otd-banner:hover{border-color:var(--rose-deep);}
+  .otd-icon{font-size:22px;flex:none;}
+  .otd-text{font-size:13.5px;color:var(--text-on-paper);line-height:1.4;}
+  .otd-text b{font-family:var(--serif);font-size:15px;}
+  .otd-more{font-size:11.5px;color:var(--rose-deep);font-weight:600;margin-left:4px;}
+  @keyframes confetti-fall{ to{ transform: translateY(100vh) rotate(720deg); opacity:0; } }
+  .spotify-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .spotify-row input{flex:1;min-width:200px;padding:9px 12px;border:1px solid var(--paper-2);border-radius:20px;font-size:13px;font-family:var(--sans);}
+  .spotify-row input:focus{outline:2px solid var(--rose);outline-offset:1px;}
+  .spotify-open-link{font-size:12.5px;color:var(--rose-deep);font-weight:600;white-space:nowrap;}
+  #spotifyEmbedWrap{margin-top:10px;}
+  #spotifyEmbedWrap iframe{border-radius:8px;display:block;}
+  .sidebar-user{font-size:13px;color:var(--text-muted-on-ink);margin-bottom:10px;}
+  .sidebar-user b{color:var(--text-on-ink);display:block;font-family:var(--serif);font-size:16px;font-weight:500;}
+  .btn-logout{background:none;border:1px solid var(--ink-3);color:var(--text-muted-on-ink);font-size:12.5px;padding:8px 10px;border-radius:3px;cursor:pointer;width:100%;}
+  .btn-logout:hover{border-color:var(--rose-deep);color:var(--text-on-ink);}
+
+  .main{background:var(--paper);color:var(--text-on-paper);padding:46px 52px;overflow-y:auto;margin-left:0;transition:margin-left .2s ease;}
+  #appScreen.sidebar-pinned .main{margin-left:230px;}
+  .view-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:34px;flex-wrap:wrap;gap:12px;}
+  .view-head h2{font-family:var(--serif);font-weight:500;font-size:36px;margin:0;}
+  .view-head .sub{color:var(--text-muted-on-paper);font-size:14px;margin-top:6px;}
+  .today{font-family:var(--serif);font-style:italic;color:var(--text-muted-on-paper);font-size:14px;}
+
+  /* ---------- MEMORIES GRID ---------- */
+  .memories-controls{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:24px;flex-wrap:wrap;}
+  .mem-tabs{display:flex;gap:4px;background:#fff;padding:4px;border-radius:20px;border:1px solid var(--paper-2);}
+  .mem-tab{border:none;background:none;padding:8px 16px;border-radius:16px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text-muted-on-paper);}
+  .mem-tab.active{background:var(--rose-deep);color:#fff;}
+  .mem-search{flex:1;min-width:200px;max-width:320px;padding:10px 16px;border:1px solid var(--paper-2);border-radius:20px;background:#fff;font-family:var(--sans);font-size:14px;color:var(--text-on-paper);}
+  .mem-search:focus{outline:2px solid var(--rose);outline-offset:1px;}
+  .memories-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:26px;}
+  .mem-card{background:#fff;padding:14px 14px 18px;box-shadow:var(--shadow);cursor:pointer;position:relative;border:1px solid rgba(0,0,0,.04);transition:transform .18s ease, box-shadow .18s ease;}
+  .mem-card:nth-child(3n+1){transform:rotate(-1.1deg);}
+  .mem-card:nth-child(3n+2){transform:rotate(0.8deg);}
+  .mem-card:nth-child(3n){transform:rotate(-0.4deg);}
+  .mem-card:hover{transform:rotate(0deg) translateY(-4px);box-shadow:0 24px 40px -16px rgba(20,14,22,.4);z-index:2;}
+  .mem-thumb{height:150px;border-radius:1px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-style:italic;font-size:14px;color:rgba(255,255,255,.85);overflow:hidden;position:relative;background-size:cover;background-position:center;}
+  .mem-kind-tag{position:absolute;top:8px;left:8px;font-size:9.5px;font-weight:700;letter-spacing:.04em;padding:3px 8px;border-radius:20px;background:rgba(33,26,36,.72);color:#fff;}
+  .mem-date{font-size:11px;letter-spacing:.04em;color:var(--text-muted-on-paper);margin-bottom:4px;}
+  .mem-title{font-family:var(--serif);font-weight:500;font-size:18px;line-height:1.25;margin:0 0 4px;}
+  .mem-author{font-size:12px;color:var(--rose-deep);font-weight:600;}
+  .mem-empty{grid-column:1/-1;text-align:center;padding:70px 20px;color:var(--text-muted-on-paper);font-family:var(--serif);font-style:italic;font-size:19px;}
+
+  .preview-float{position:fixed;z-index:50;width:260px;max-height:170px;overflow:hidden;background:var(--ink);color:var(--text-on-ink);padding:14px 16px;border-radius:4px;box-shadow:var(--shadow);font-size:12.5px;line-height:1.55;pointer-events:none;opacity:0;transition:opacity .12s ease;}
+  .preview-float.show{opacity:1;}
+  .preview-float b{display:block;font-family:var(--serif);font-size:14px;margin-bottom:5px;color:var(--gold);}
+
+  /* ---------- MODAL ---------- */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(20,14,22,.68);z-index:100;align-items:center;justify-content:center;padding:30px;}
+  .modal-overlay.open{display:flex;}
+  .modal-box{background:#fff;width:min(760px,100%);max-height:88vh;display:flex;flex-direction:column;box-shadow:var(--shadow);}
+  .modal-head{padding:18px 24px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--paper-2);}
+  .modal-head-text .modal-date{font-size:11.5px;color:var(--text-muted-on-paper);}
+  .modal-head-text .modal-title{font-family:var(--serif);font-size:21px;font-weight:500;color:var(--text-on-paper);}
+  .modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-muted-on-paper);line-height:1;}
+  .modal-close:hover{color:var(--rose-deep);}
+  .modal-head-actions{display:flex;align-items:center;gap:6px;}
+  .modal-action-btn{background:none;border:none;font-size:16px;cursor:pointer;padding:6px;border-radius:50%;line-height:1;}
+  .modal-action-btn:hover{background:var(--paper);}
+  .modal-frame-wrap{flex:1;overflow:auto;}
+
+  /* ---------- REACTIONS / NOTES / PIN ---------- */
+  .modal-notes{border-top:1px solid var(--paper-2);padding:16px 24px 18px;background:#fff;max-height:260px;display:flex;flex-direction:column;}
+  .modal-notes-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+  .reactions-row{display:flex;gap:6px;flex-wrap:wrap;}
+  .reaction-btn,.pin-btn{border:1px solid var(--paper-2);background:#fff;border-radius:20px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text-on-paper);}
+  .reaction-btn.active{border-color:var(--rose-deep);background:#FBEFF0;}
+  .pin-btn.active{border-color:var(--gold);background:#FBF3E2;}
+  .modal-notes-list{overflow-y:auto;flex:1;margin-bottom:10px;min-height:0;}
+  .notes-empty{font-size:13px;color:var(--text-muted-on-paper);font-style:italic;padding:6px 0;}
+  .note-item{padding:8px 0;border-bottom:1px solid var(--paper-2);}
+  .note-item:last-child{border-bottom:none;}
+  .note-head{display:flex;justify-content:space-between;font-size:11.5px;color:var(--text-muted-on-paper);margin-bottom:3px;}
+  .note-head b{color:var(--text-on-paper);font-family:var(--serif);font-size:13px;}
+  .note-text{font-size:13.5px;color:var(--text-on-paper);line-height:1.4;}
+  .modal-notes-add{display:flex;gap:8px;}
+  .modal-notes-add input{flex:1;padding:9px 12px;border:1px solid var(--paper-2);border-radius:20px;font-size:13.5px;font-family:var(--sans);}
+  .modal-notes-add input:focus{outline:2px solid var(--rose);outline-offset:1px;}
+  .btn-secondary{background:var(--rose-deep);color:#fff;border:none;border-radius:20px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;}
+  .btn-secondary:hover{background:var(--ink);}
+  .mem-pin-btn{
+    position:absolute;top:10px;right:10px;z-index:3;width:28px;height:28px;border-radius:50%;
+    background:rgba(255,255,255,.9);border:none;cursor:pointer;font-size:14px;color:var(--text-muted-on-paper);
+    display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(0,0,0,.15);
+  }
+  .mem-pin-btn.pinned{color:var(--gold);}
+  .mem-heart-count{font-size:11.5px;color:var(--rose-deep);font-weight:600;margin-left:6px;}
+  .post-render-frame{width:100%;min-height:420px;border:none;display:block;}
+
+  /* ---------- PHOTO CANVAS (shared: arrange editor + final view) ---------- */
+  .photo-canvas-wrap{position:relative;width:100%;overflow:hidden;}
+  .arrange-overlay{position:absolute;inset:0;}
+  .arrange-photo{position:absolute;cursor:grab;touch-action:none;}
+  .arrange-photo:active{cursor:grabbing;}
+  .arrange-photo img{width:100%;display:block;border-radius:4px;box-shadow:0 10px 22px -10px rgba(20,14,22,.45);pointer-events:none;user-select:none;}
+  .arrange-photo.selected img{outline:3px solid var(--gold);outline-offset:2px;}
+  .arrange-photo.view-only{pointer-events:none;cursor:default;}
+
+  /* ---------- POST FORM (shared field styles) ---------- */
+  .post-form{display:flex;flex-direction:column;gap:24px;}
+  .post-fields .field input[type="text"],.post-fields .field input[type="date"]{width:100%;}
+  .post-fields .field-label-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px;}
+  .post-fields .field-label-row span.hint{font-size:11px;color:var(--text-muted-on-paper);font-weight:400;}
+  .preview-pane{background:#fff;border:1px solid var(--paper-2);box-shadow:var(--shadow);display:flex;flex-direction:column;width:100%;}
+  .preview-pane-head{padding:10px 16px;border-bottom:1px solid var(--paper-2);font-size:11.5px;letter-spacing:.04em;color:var(--text-muted-on-paper);font-weight:600;}
+  .preview-pane iframe{flex:1;width:100%;border:none;min-height:60vh;}
+  .form-actions{display:flex;align-items:center;gap:14px;margin-top:6px;flex-wrap:wrap;}
+  .form-actions .btn-primary{width:auto;padding:12px 28px;}
+  .form-msg{font-size:13px;color:var(--rose-deep);font-weight:600;}
+
+  /* ---------- NO-CODE STYLE PANEL ---------- */
+  .style-panel{border:1px solid var(--paper-2);background:#fff;border-radius:3px;padding:18px 18px 20px;margin-bottom:18px;}
+  .style-panel-title{font-size:11.5px;letter-spacing:.05em;color:var(--text-muted-on-paper);font-weight:700;margin-bottom:12px;}
+  .theme-hint{font-size:12px;color:var(--text-muted-on-paper);margin:-6px 0 14px;}
+  .custom-theme-panel{margin-top:16px;padding-top:16px;border-top:1px solid var(--paper-2);}
+  body,.sidebar,.main,.mem-card,.auth-left,.auth-right{transition:background-color .3s ease, color .3s ease;}
+  .preset-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:18px;}
+  .preset-swatch{border:2px solid transparent;border-radius:4px;cursor:pointer;padding:8px 6px 7px;background:var(--paper);text-align:center;}
+  .preset-swatch:hover{transform:translateY(-2px);}
+  .preset-swatch.active{border-color:var(--rose-deep);}
+  .preset-chip{height:26px;border-radius:3px;margin-bottom:6px;}
+  .preset-swatch .p-label{font-size:10.5px;color:var(--text-muted-on-paper);font-weight:600;}
+  .style-row{display:flex;gap:14px;margin-bottom:14px;flex-wrap:wrap;}
+  .style-row .field{flex:1;min-width:120px;margin-bottom:0;}
+  .style-row select{width:100%;padding:9px 10px;border:1px solid var(--paper-2);background:#fff;border-radius:3px;font-size:13.5px;color:var(--text-on-paper);font-family:var(--sans);}
+  .color-field{display:flex;flex-direction:column;gap:7px;}
+  .color-field input[type="color"]{width:100%;height:36px;border:1px solid var(--paper-2);border-radius:3px;padding:2px;cursor:pointer;background:#fff;}
+  .align-group{display:flex;gap:6px;}
+  .align-btn{flex:1;padding:9px 0;border:1px solid var(--paper-2);background:#fff;border-radius:3px;cursor:pointer;font-size:13px;color:var(--text-muted-on-paper);}
+  .align-btn.active{background:var(--rose-deep);border-color:var(--rose-deep);color:#fff;}
+  .advanced-toggle{background:none;border:none;color:var(--rose-deep);font-size:12.5px;font-weight:600;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px;}
+  .advanced-css-wrap{margin-top:14px;}
+
+  /* ---------- PHOTO UPLOAD ---------- */
+  .photo-field{margin-bottom:18px;}
+  .photo-add-btn{display:inline-flex;align-items:center;gap:8px;border:1.5px dashed var(--paper-2);background:#fff;color:var(--rose-deep);font-size:13.5px;font-weight:600;padding:10px 16px;border-radius:4px;cursor:pointer;}
+  .photo-add-btn:hover{border-color:var(--rose-deep);background:var(--paper);}
+  .photo-add-btn input[type="file"]{display:none;}
+  .photo-hint{font-size:11.5px;color:var(--text-muted-on-paper);margin-top:7px;}
+  .photo-thumbs{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;}
+  .photo-thumb{position:relative;width:78px;height:78px;border-radius:4px;overflow:hidden;border:2px solid transparent;cursor:pointer;flex:none;}
+  .photo-thumb img,.photo-thumb video{width:100%;height:100%;object-fit:cover;display:block;}
+  .thumb-play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;text-shadow:0 1px 4px rgba(0,0,0,.6);pointer-events:none;}
+  .photo-thumb .remove-x{position:absolute;top:3px;right:3px;width:18px;height:18px;border-radius:50%;background:rgba(33,26,36,.75);color:#fff;border:none;font-size:12px;line-height:18px;text-align:center;cursor:pointer;padding:0;}
+  .photo-thumb .remove-x:hover{background:var(--rose-deep);}
+
+  .layout-swatch-frame{overflow:hidden;position:relative;background:var(--paper);border:1.5px solid var(--paper-2);border-radius:4px;}
+
+  /* ---------- CONTENT MODE: WRITE / HTML ---------- */
+  .mode-toggle{display:flex;gap:4px;background:var(--paper);padding:3px;border-radius:20px;}
+  .mode-btn{border:none;background:none;padding:5px 13px;border-radius:16px;font-size:11.5px;font-weight:700;cursor:pointer;color:var(--text-muted-on-paper);}
+  .mode-btn.active{background:var(--rose-deep);color:#fff;}
+  .write-toolbar{display:flex;gap:6px;margin-bottom:8px;}
+  .write-toolbar button{border:1px solid var(--paper-2);background:#fff;border-radius:3px;padding:6px 10px;font-size:13px;cursor:pointer;color:var(--text-on-paper);}
+  .write-toolbar button:hover{border-color:var(--rose-deep);color:var(--rose-deep);}
+  .write-editor{width:100%;min-height:220px;border:1px solid var(--paper-2);background:#fff;border-radius:3px;padding:14px;font-family:var(--sans);font-size:15px;line-height:1.65;color:var(--text-on-paper);overflow-y:auto;}
+  .write-editor:focus{outline:2px solid var(--rose);outline-offset:1px;}
+  .write-editor:empty:before{content:attr(data-placeholder);color:var(--text-muted-on-paper);pointer-events:none;}
+  .write-editor h2{font-family:var(--serif);font-weight:500;font-size:20px;margin:.5em 0;}
+  .write-editor blockquote{border-left:3px solid var(--rose-deep);margin:.6em 0;padding-left:14px;font-style:italic;color:var(--text-muted-on-paper);}
+  .html-editor{width:100%;min-height:220px;font-family:'SF Mono',Menlo,Consolas,monospace;font-size:12.5px;line-height:1.55;padding:12px;border:1px solid var(--paper-2);background:#fff;border-radius:3px;color:#2B2230;resize:vertical;}
+
+  /* ---------- ARRANGE STEP ---------- */
+  .arrange-templates{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;}
+  .template-btn{background:#fff;border:1px solid var(--paper-2);padding:8px 14px;border-radius:20px;font-size:12.5px;font-weight:600;color:var(--text-on-paper);cursor:pointer;}
+  .template-btn:hover{border-color:var(--rose-deep);color:var(--rose-deep);}
+  .canvas-toolbar{display:flex;flex-direction:column;align-items:flex-start;gap:10px;margin-bottom:14px;}
+  .canvas-toolbar .grp{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--paper-2);border-radius:20px;padding:4px 6px;flex-wrap:wrap;}
+  .canvas-toolbar .grp button:not(.template-btn){background:none;border:none;width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:14px;color:var(--text-on-paper);padding:0;}
+  .canvas-toolbar .grp button:not(.template-btn):hover{background:var(--paper);}
+  .canvas-toolbar .lbl{font-size:11.5px;color:var(--text-muted-on-paper);padding:0 4px;}
+  #arrangeToolbar{display:none;}
+  .arrange-canvas-scroll{max-height:64vh;overflow-y:auto;border:1px solid var(--paper-2);background:#e9e2d2;padding:20px;}
+  .arrange-canvas{position:relative;width:100%;max-width:640px;margin:0 auto;background:#fff;box-shadow:var(--shadow);}
+  .arrange-canvas .bg-frame{width:100%;height:100%;border:none;display:block;pointer-events:none;}
+  .arrange-hint{font-size:12px;color:var(--text-muted-on-paper);margin-bottom:10px;}
+  .step-back{background:none;border:none;color:var(--rose-deep);font-size:13px;font-weight:600;cursor:pointer;padding:0;}
+
+  /* ---------- ALBUM FORM ---------- */
+  .album-form{max-width:640px;}
+  .cover-swatch-frame{width:100%;height:88px;border-radius:4px;overflow:hidden;position:relative;}
+  .cover-swatch-frame svg{width:100%;height:100%;}
+
+  /* ---------- BOOK VIEWER ---------- */
+  .book-stage{perspective:1800px;display:flex;align-items:center;justify-content:center;padding:36px 20px;min-height:480px;background:#e9e2d2;}
+  .book{position:relative;width:340px;height:460px;}
+  .book-cover{
+    position:absolute;inset:0;border-radius:3px 10px 10px 3px;box-shadow:0 24px 60px -24px rgba(0,0,0,.6);
+    transform-origin:left center;transform-style:preserve-3d;transition:transform 1.1s cubic-bezier(.6,0,.3,1);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;
+    padding:26px;box-sizing:border-box;backface-visibility:hidden;z-index:2;
+  }
+  .book-cover.opening{transform:rotateY(-155deg);}
+  .book-cover svg{width:150px;height:110px;margin-bottom:14px;}
+  .book-cover-title{font-family:var(--serif);font-weight:500;font-size:21px;line-height:1.25;}
+  .book-cover-date{font-size:11.5px;opacity:.8;margin-top:6px;letter-spacing:.03em;}
+  .book-pages-wrap{
+    position:absolute;inset:6px 4px 6px 10px;background:#fffaf2;border-radius:2px 8px 8px 2px;
+    opacity:0;transition:opacity .5s ease .55s;overflow:hidden;
+    box-shadow:inset 5px 0 14px -8px rgba(0,0,0,.25);z-index:1;
+  }
+  .book-pages-wrap.show{opacity:1;}
+  .book-page{position:relative;width:100%;height:100%;}
+  .book-page-nav{position:absolute;left:0;right:0;bottom:10px;display:flex;align-items:center;justify-content:center;gap:14px;}
+  .book-page-nav button{background:rgba(33,26,36,.75);color:#fff;border:none;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px;}
+  .book-page-nav button:disabled{opacity:.3;cursor:default;}
+  .book-page-nav span{font-size:11px;color:var(--text-muted-on-paper);background:#fff;padding:3px 10px;border-radius:20px;}
+
+  /* ---------- ACTIVITY LOG ---------- */
+  .log-table{width:100%;border-collapse:collapse;}
+  .log-table thead th{text-align:left;font-size:11.5px;letter-spacing:.05em;color:var(--text-muted-on-paper);font-weight:600;padding:0 0 12px;border-bottom:1px solid var(--paper-2);}
+  .log-table tbody td{padding:14px 0;border-bottom:1px solid var(--paper-2);font-size:14px;vertical-align:top;}
+  .log-table tbody tr:last-child td{border-bottom:none;}
+  .log-user{font-family:var(--serif);font-weight:500;font-size:16px;}
+  .log-tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.03em;padding:3px 9px;border-radius:20px;background:var(--paper-2);color:var(--rose-deep);}
+
+  /* ---------- CALENDAR ---------- */
+  .cal-toolbar{display:flex;align-items:center;gap:14px;margin-bottom:20px;}
+  .cal-month-label{font-family:var(--serif);font-size:20px;font-weight:500;min-width:180px;text-align:center;}
+  .cal-layout{display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:start;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--paper-2);border:1px solid var(--paper-2);border-radius:6px;overflow:hidden;}
+  .cal-weekday{background:var(--ink);color:var(--text-on-ink);text-align:center;padding:8px 0;font-size:10.5px;font-weight:700;letter-spacing:.04em;}
+  .cal-day{background:#fff;min-height:88px;padding:6px;position:relative;cursor:pointer;overflow:hidden;}
+  .cal-day:hover{background:var(--paper);}
+  .cal-day.other-month{background:#f7f2e8;opacity:.45;}
+  .cal-day.today .cal-day-num{background:var(--rose-deep);color:#fff;border-radius:50%;}
+  .cal-day.selected{outline:2px solid var(--rose-deep);outline-offset:-2px;}
+  .cal-day-num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;font-size:12px;font-weight:600;margin-bottom:4px;color:var(--text-on-paper);}
+  .cal-event-chip{font-size:10px;background:var(--paper-2);color:var(--rose-deep);border-radius:4px;padding:2px 5px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .cal-event-more{font-size:9.5px;color:var(--text-muted-on-paper);}
+  .cal-day-panel{background:#fff;border:1px solid var(--paper-2);border-radius:8px;padding:18px;box-shadow:var(--shadow);}
+  .cal-panel-date{font-family:var(--serif);font-size:18px;font-weight:500;margin-bottom:14px;color:var(--text-on-paper);}
+  .cal-panel-empty{color:var(--text-muted-on-paper);font-family:var(--serif);font-style:italic;font-size:13px;margin-bottom:16px;}
+  .cal-event-item{border-bottom:1px solid var(--paper-2);padding:10px 0;}
+  .cal-event-item-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+  .cal-event-title{font-size:14px;font-weight:600;color:var(--text-on-paper);}
+  .cal-event-time{color:var(--rose-deep);}
+  .cal-event-note{font-size:13px;color:var(--text-on-paper);margin-top:3px;white-space:pre-wrap;}
+  .cal-event-meta{font-size:11px;color:var(--text-muted-on-paper);margin-top:4px;}
+  .cal-event-remove{background:none;border:none;color:var(--text-muted-on-paper);font-size:16px;cursor:pointer;flex:none;}
+  .cal-event-remove:hover{color:var(--rose-deep);}
+  .cal-add-form{margin-top:14px;padding-top:14px;border-top:1px solid var(--paper-2);display:flex;flex-direction:column;gap:8px;}
+  .cal-add-form input,.cal-add-form textarea{padding:9px 12px;border:1px solid var(--paper-2);border-radius:6px;font-family:var(--sans);font-size:13.5px;box-sizing:border-box;}
+
+  /* ---------- TIMELINE ---------- */
+  .timeline-filter-banner{display:none;align-items:center;gap:10px;background:#fff;border:1px solid var(--paper-2);border-radius:20px;padding:8px 16px;margin-bottom:16px;font-size:13px;width:fit-content;}
+  .timeline-filter-banner button{background:none;border:none;color:var(--rose-deep);font-weight:600;cursor:pointer;font-size:13px;}
+  .timeline-group{margin-bottom:8px;}
+  .timeline-month-btn{
+    width:100%;display:flex;justify-content:space-between;align-items:center;
+    background:#fff;border:1px solid var(--paper-2);border-radius:6px;padding:14px 18px;
+    cursor:pointer;margin-bottom:8px;text-align:left;
+  }
+  .timeline-month-btn:hover{border-color:var(--rose-deep);}
+  .timeline-month-name{font-family:var(--serif);font-size:18px;font-weight:500;}
+  .timeline-month-count{font-size:12px;color:var(--text-muted-on-paper);background:var(--paper-2);padding:3px 10px;border-radius:20px;}
+
+  /* ---------- MILESTONES ---------- */
+  .milestone-list{display:flex;flex-direction:column;gap:12px;}
+  .milestone-card{
+    background:#fff;border:1px solid var(--paper-2);border-radius:6px;padding:16px 20px;
+    display:flex;justify-content:space-between;align-items:center;box-shadow:var(--shadow);
+  }
+  .milestone-name{font-family:var(--serif);font-size:18px;font-weight:500;margin-bottom:3px;}
+  .milestone-date{font-size:12px;color:var(--text-muted-on-paper);}
+  .milestone-count{font-family:var(--serif);font-style:italic;font-size:16px;color:var(--rose-deep);text-align:right;}
+  .milestone-recurring-check{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted-on-paper);margin:-6px 0 16px;cursor:pointer;}
+  .milestone-recurring-check input{width:15px;height:15px;cursor:pointer;}
+  .milestone-yearly-tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.03em;padding:2px 8px;border-radius:20px;background:var(--paper-2);color:var(--rose-deep);margin-left:8px;vertical-align:middle;}
+  .milestone-remove{background:none;border:none;color:var(--text-muted-on-paper);font-size:16px;cursor:pointer;margin-left:14px;}
+  .milestone-remove:hover{color:var(--rose-deep);}
+  .milestone-empty,.capsule-empty,.bucket-empty{color:var(--text-muted-on-paper);font-family:var(--serif);font-style:italic;padding:20px 0;}
+
+  /* ---------- ALL PHOTOS ---------- */
+  .all-photos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
+  .all-photos-grid .ap-item{position:relative;cursor:pointer;border-radius:4px;overflow:hidden;aspect-ratio:1;box-shadow:var(--shadow);}
+  .all-photos-grid .ap-item img,.all-photos-grid .ap-item video{width:100%;height:100%;object-fit:cover;display:block;transition:transform .2s ease;}
+  .all-photos-grid .ap-item:hover video{transform:scale(1.06);}
+  .all-photos-grid .ap-item:hover img{transform:scale(1.06);}
+  .all-photos-grid .ap-item .ap-label{
+    position:absolute;left:0;right:0;bottom:0;background:linear-gradient(transparent,rgba(20,14,22,.75));
+    color:#fff;font-size:10.5px;padding:14px 8px 6px;
+  }
+
+  /* ---------- LOVE LETTERS ---------- */
+  .capsule-list{display:flex;flex-direction:column;gap:12px;}
+  .capsule-card{background:#fff;border:1px solid var(--paper-2);border-radius:6px;padding:18px 20px;box-shadow:var(--shadow);}
+  .capsule-title{font-family:var(--serif);font-size:18px;font-weight:500;margin-bottom:4px;}
+  .capsule-meta{font-size:12px;color:var(--text-muted-on-paper);margin-bottom:10px;}
+  .capsule-locked{font-size:13px;color:var(--rose-deep);font-weight:600;}
+  .capsule-text{font-size:14px;line-height:1.6;color:var(--text-on-paper);white-space:pre-wrap;}
+  .capsule-open-btn{margin-top:8px;}
+
+  /* ---------- BUCKET LIST ---------- */
+  .bucket-list{display:flex;flex-direction:column;gap:16px;}
+  .bucket-card{background:#fff;border:1px solid var(--paper-2);border-radius:8px;padding:18px 20px;box-shadow:var(--shadow);}
+  .bucket-card.done{border-color:var(--rose-deep);}
+  .bucket-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:4px;}
+  .bucket-card-title{font-family:var(--serif);font-size:19px;font-weight:500;}
+  .bucket-card-title.done-text{text-decoration:line-through;color:var(--text-muted-on-paper);}
+  .bucket-card-meta{font-size:11.5px;color:var(--text-muted-on-paper);margin-bottom:10px;}
+  .bucket-card-content{font-size:14px;line-height:1.55;color:var(--text-on-paper);margin-bottom:12px;white-space:pre-wrap;}
+  .bucket-done-badge{font-size:10.5px;font-weight:700;letter-spacing:.03em;padding:3px 10px;border-radius:20px;background:#FBEFF0;color:var(--rose-deep);white-space:nowrap;flex:none;}
+  .bucket-complete-block{background:var(--paper);border-radius:6px;padding:12px 14px;margin-bottom:12px;}
+  .bucket-complete-block img{max-width:220px;border-radius:4px;margin-top:8px;display:block;}
+  .bucket-complete-meta{font-size:12px;color:var(--rose-deep);font-weight:600;}
+  .bucket-complete-note{font-size:13.5px;margin-top:6px;color:var(--text-on-paper);}
+  .bucket-complete-form{background:var(--paper);border-radius:6px;padding:14px;margin-bottom:12px;}
+  .bucket-complete-form input[type="text"]{width:100%;padding:9px 12px;border:1px solid var(--paper-2);border-radius:20px;font-family:var(--sans);font-size:13.5px;margin-bottom:10px;box-sizing:border-box;}
+  .bucket-actions-row{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;align-items:center;}
+  .bucket-remove{background:none;border:none;color:var(--text-muted-on-paper);font-size:12.5px;font-weight:600;cursor:pointer;}
+  .bucket-remove:hover{color:var(--rose-deep);}
+
+  /* ---------- DAILY QUESTION ---------- */
+  .daily-question-card{background:#fff;border:1px solid var(--paper-2);border-radius:8px;padding:26px;max-width:600px;box-shadow:var(--shadow);}
+  .daily-question-text{font-family:var(--serif);font-size:22px;font-weight:500;margin-bottom:18px;line-height:1.35;}
+  .daily-answer-block{margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--paper-2);}
+  .daily-answer-block:last-of-type{border-bottom:none;}
+  .daily-answer-user{font-size:12px;font-weight:700;color:var(--rose-deep);margin-bottom:4px;}
+  .daily-answer-text{font-size:14px;line-height:1.5;}
+  .daily-answer-empty{font-size:13px;color:var(--text-muted-on-paper);font-style:italic;}
+  .daily-answer-input{display:flex;gap:8px;margin-top:16px;}
+  .daily-answer-input input{flex:1;padding:10px 14px;border:1px solid var(--paper-2);border-radius:20px;font-family:var(--sans);font-size:14px;}
+
+  @media (max-width:860px){
+    #authScreen{grid-template-columns:1fr;}
+    .auth-left{padding:40px 28px;}
+    .auth-right{padding:36px 24px;}
+    .sidebar{width:min(230px,80vw);}
+    .sidebar-hover-zone{width:20px;}
+    .main{padding:30px 22px;}
+    #appScreen.sidebar-pinned .main{margin-left:0;}
+    .cal-layout{grid-template-columns:1fr;}
+    .cal-day{min-height:64px;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= AUTH SCREEN ================= -->
+<div id="authScreen">
+  <div class="auth-left">
+    <div class="auth-mark">a private place</div>
+    <div class="auth-hero">
+      <h1>Us.</h1>
+      <p>Every ordinary Tuesday, every trip, every dumb inside joke — kept somewhere just for the two of you.</p>
+    </div>
+    <div class="auth-quote">"The days you almost forgot are the ones worth writing down."</div>
+  </div>
+  <div class="auth-right">
+    <div class="auth-form-wrap">
+      <div class="invite-banner" id="inviteBanner" style="display:none;"><div id="inviteBannerText"></div></div>
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">Sign in</button>
+        <button class="auth-tab" id="tabRegister" onclick="switchAuthTab('register')">Register</button>
+      </div>
+      <form id="loginForm" onsubmit="return handleLogin(event)">
+        <div class="field"><label for="loginUser">Username</label><input type="text" id="loginUser" autocomplete="username" required></div>
+        <div class="field"><label for="loginPass">Password</label><input type="password" id="loginPass" autocomplete="current-password" required></div>
+        <div class="auth-error" id="loginError"></div>
+        <button type="submit" class="btn-primary">Sign in</button>
+        <div class="auth-hint">Test account — username <b>admin</b>, password <b>admin</b>.</div>
+      </form>
+      <form id="registerForm" onsubmit="return handleRegister(event)" style="display:none;">
+        <div class="field"><label for="regUser">Username</label><input type="text" id="regUser" autocomplete="username" required></div>
+        <div class="field"><label for="regEmail">Email</label><input type="email" id="regEmail" autocomplete="email" required></div>
+        <div class="field"><label for="regPass">Password</label><input type="password" id="regPass" autocomplete="new-password" required></div>
+        <div class="field"><label for="regPass2">Confirm password</label><input type="password" id="regPass2" autocomplete="new-password" required></div>
+        <div class="auth-error" id="registerError"></div>
+        <button type="submit" class="btn-primary">Create account</button>
+        <div class="auth-hint">Only the two of you should hold accounts here.</div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ================= APP SHELL ================= -->
+<div id="appScreen">
+  <div class="sidebar-hover-zone" id="sidebarHoverZone" title="Hover for menu"></div>
+  <div class="sidebar" id="mainSidebar">
+    <div class="brand" onclick="switchView('memories')" style="cursor:pointer;" title="Go to Memories">Us.</div>
+    <div class="notif-bell-wrap">
+      <button type="button" class="notif-bell-btn" onclick="toggleNotifPanel()">
+        🔔 Notifications <span class="notif-badge" id="notifBadge" style="display:none;">0</span>
+      </button>
+      <div class="notif-panel" id="notifPanel" style="display:none;"></div>
+    </div>
+    <ul class="nav">
+      <li><button class="nav-btn active" data-view="memories" onclick="switchView('memories')"><span class="num">01</span> Memories</button></li>
+      <li><button class="nav-btn" data-view="newpost" onclick="switchView('newpost')"><span class="num">02</span> New post</button></li>
+      <li><button class="nav-btn" data-view="album" onclick="switchView('album')"><span class="num">03</span> Photo album</button></li>
+      <li><button class="nav-btn" data-view="timeline" onclick="switchView('timeline')"><span class="num">04</span> Timeline</button></li>
+      <li><button class="nav-btn" data-view="milestones" onclick="switchView('milestones')"><span class="num">05</span> Milestones</button></li>
+      <li><button class="nav-btn" data-view="calendar" onclick="switchView('calendar')"><span class="num">06</span> Calendar</button></li>
+      <li><button class="nav-btn" data-view="allphotos" onclick="switchView('allphotos')"><span class="num">07</span> All photos</button></li>
+      <li><button class="nav-btn" data-view="capsules" onclick="switchView('capsules')"><span class="num">08</span> Love letters</button></li>
+      <li><button class="nav-btn" data-view="bucketlist" onclick="switchView('bucketlist')"><span class="num">09</span> Bucket list</button></li>
+      <li><button class="nav-btn" data-view="daily" onclick="switchView('daily')"><span class="num">10</span> Daily question</button></li>
+      <li><button class="nav-btn" data-view="settings" onclick="switchView('settings')"><span class="num">11</span> Settings</button></li>
+      <li><button class="nav-btn" data-view="activity" onclick="switchView('activity')"><span class="num">12</span> Activity logs</button></li>
+    </ul>
+    <div class="sidebar-foot">
+      <button class="btn-logout" onclick="exportAllData()" style="margin-bottom:8px;">⬇ Export all data</button>
+      <div class="export-status" id="exportStatus"></div>
+      <div class="sidebar-user">Signed in as<b id="sidebarUsername">—</b></div>
+      <button class="btn-logout" onclick="handleLogout()">Sign out</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- MEMORIES VIEW -->
+    <div class="view" id="view-memories">
+      <div class="view-head">
+        <div><h2>Memories</h2><div class="sub">Every post and photo memory, in the order they happened.</div></div>
+        <div class="today" id="todayLabel"></div>
+      </div>
+      <div class="spotify-panel">
+        <div class="spotify-row">
+          <input type="text" id="spotifyInput" placeholder="Paste a Spotify track, album or playlist link to set the mood...">
+          <button type="button" class="btn-secondary" onclick="saveSpotifyLink()">Set</button>
+          <a id="spotifyOpenLink" href="#" target="_blank" rel="noopener" class="spotify-open-link" style="display:none;">Open in Spotify ↗</a>
+        </div>
+        <div id="spotifyEmbedWrap"></div>
+      </div>
+      <div class="otd-banner" id="onThisDayBanner" style="display:none;" onclick="openModal(_onThisDayMatches[0])"></div>
+      <div class="timeline-filter-banner" id="timelineFilterBanner" style="display:none;"></div>
+      <div class="memories-controls">
+        <div class="mem-tabs" id="memTabs">
+          <button type="button" class="mem-tab active" data-filter="all" onclick="setMemoriesFilter('all')">All</button>
+          <button type="button" class="mem-tab" data-filter="post" onclick="setMemoriesFilter('post')">Memories</button>
+          <button type="button" class="mem-tab" data-filter="album" onclick="setMemoriesFilter('album')">Photo Memories</button>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <input type="text" id="memSearchInput" class="mem-search" placeholder="Search by title..." oninput="handleMemSearch()">
+          <button type="button" class="btn-secondary" onclick="surpriseMeMemory()">🎲 Surprise me</button>
+        </div>
+      </div>
+      <div class="memories-grid" id="memoriesGrid"></div>
+    </div>
+
+    <!-- NEW POST VIEW -->
+    <div class="view" id="view-newpost" style="display:none;">
+
+      <div id="postStepWrite">
+        <div class="view-head">
+          <div><h2>New post</h2><div class="sub">Write it plain, or bring your own HTML and CSS. Add photos now — you'll place them on the next page.</div></div>
+        </div>
+        <div class="post-form" id="postFormFields">
+          <div class="post-fields">
+            <div class="field"><label for="postTitle">Title</label><input type="text" id="postTitle" placeholder="e.g. Rainy afternoon in Kyoto"></div>
+            <div class="field"><label for="postDate">Date</label><input type="date" id="postDate"></div>
+
+            <div class="photo-field">
+              <label>Photos</label>
+              <label class="photo-add-btn">📷 Add photo(s)<input type="file" id="photoInput" accept="image/*" multiple onchange="handlePhotoSelect(event)"></label>
+              <div class="photo-hint">Upload here — you'll drag them into place on the next page, after you're done writing.</div>
+              <div class="photo-thumbs" id="photoThumbs"></div>
+            </div>
+
+            <div class="field">
+              <div class="field-label-row">
+                <label style="margin:0;">Content</label>
+                <div class="mode-toggle">
+                  <button type="button" class="mode-btn active" id="modeWriteBtn" onclick="setContentMode('write')">Write</button>
+                  <button type="button" class="mode-btn" id="modeHtmlBtn" onclick="setContentMode('html')">HTML</button>
+                </div>
+              </div>
+              <div class="write-toolbar" id="writeToolbar">
+                <button type="button" title="Bold" onclick="formatDoc('bold')"><b>B</b></button>
+                <button type="button" title="Italic" onclick="formatDoc('italic')"><i>I</i></button>
+                <button type="button" title="Heading" onclick="formatDoc('formatBlock','H2')">H</button>
+                <button type="button" title="Quote" onclick="formatDoc('formatBlock','BLOCKQUOTE')">&ldquo;</button>
+                <button type="button" title="Bulleted list" onclick="formatDoc('insertUnorderedList')">&bull; list</button>
+                <button type="button" title="Plain paragraph" onclick="formatDoc('formatBlock','P')">&para;</button>
+              </div>
+              <div class="write-editor" id="writeEditor" contenteditable="true" data-placeholder="Write your memory here — just type, no tags needed." oninput="handleWriteInput()"></div>
+              <textarea id="postContent" class="html-editor" style="display:none;" oninput="updatePostPreview()" placeholder="&lt;p&gt;Write your memory here...&lt;/p&gt;"></textarea>
+              <div class="photo-hint" id="contentModeHint">Type normally — bold, headings and lists all work from the toolbar. Prefer raw markup? Switch to HTML.</div>
+            </div>
+
+            <div class="style-panel">
+              <div class="style-panel-title">STYLE THIS MEMORY — NO CODE NEEDED</div>
+              <div class="preset-row" id="presetRow"></div>
+              <div class="style-row">
+                <div class="field"><label for="styleFont">Font</label>
+                  <select id="styleFont" onchange="applyControlsToState()">
+                    <option value="serif">Elegant serif</option>
+                    <option value="sans">Clean sans</option>
+                    <option value="hand">Handwritten</option>
+                    <option value="mono">Typewriter</option>
+                  </select>
+                </div>
+                <div class="field"><label for="styleSize">Text size</label>
+                  <select id="styleSize" onchange="applyControlsToState()">
+                    <option value="15">Small</option><option value="17" selected>Medium</option><option value="21">Large</option>
+                  </select>
+                </div>
+                <div class="field"><label>Alignment</label>
+                  <div class="align-group" id="alignGroup">
+                    <button type="button" class="align-btn active" data-align="left" onclick="setAlign('left')">Left</button>
+                    <button type="button" class="align-btn" data-align="center" onclick="setAlign('center')">Center</button>
+                    <button type="button" class="align-btn" data-align="right" onclick="setAlign('right')">Right</button>
+                  </div>
+                </div>
+              </div>
+              <div class="style-row">
+                <div class="field color-field"><label for="styleTextColor">Text color</label><input type="color" id="styleTextColor" value="#2B2230" onchange="applyControlsToState()"></div>
+                <div class="field color-field"><label for="styleBgColor">Background</label><input type="color" id="styleBgColor" value="#F3ECDD" onchange="applyControlsToState()"></div>
+                <div class="field color-field"><label for="styleAccentColor">Accent</label><input type="color" id="styleAccentColor" value="#C17B84" onchange="applyControlsToState()"></div>
+              </div>
+              <button type="button" class="advanced-toggle" id="advancedToggleBtn" onclick="toggleAdvancedCss()">Prefer to write CSS yourself? Switch to code mode</button>
+              <div class="advanced-css-wrap" id="advancedCssWrap" style="display:none;">
+                <div class="field-label-row"><label for="postCss" style="margin:0;">Styling (CSS)</label><span class="hint">this overrides the controls above</span></div>
+                <textarea id="postCss" oninput="updatePostPreview()" placeholder="p { font-size: 18px; }"></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="preview-pane">
+            <div class="preview-pane-head">LIVE PREVIEW</div>
+            <iframe id="postPreviewFrame" title="Post preview" sandbox=""></iframe>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn-primary" id="postWriteNextBtn" onclick="goToArrangeStep()">Next: arrange photos →</button>
+            <button type="button" class="step-back" id="cancelEditBtn" style="display:none;" onclick="cancelEditPost()">Cancel edit</button>
+            <span class="form-msg" id="postFormMsg"></span>
+          </div>
+        </div>
+      </div>
+
+      <div id="postStepArrange" style="display:none;">
+        <div class="view-head">
+          <div><h2>Arrange your photos</h2><div class="sub">Drag each photo anywhere over the post. Pick a starting layout below, then fine-tune.</div></div>
+          <button class="step-back" onclick="backToWriteStep()">&larr; Back to writing</button>
+        </div>
+        <div class="arrange-templates" id="arrangeTemplates"></div>
+        <div class="canvas-toolbar">
+          <div class="grp">
+            <span class="lbl">Canvas height</span>
+            <button type="button" onclick="growCanvas(-120)">&minus;</button>
+            <button type="button" onclick="growCanvas(120)">&plus;</button>
+          </div>
+          <div class="grp" id="arrangeToolbar">
+            <span class="lbl">Selected photo</span>
+            <button type="button" onclick="rotateSelected(-10)" title="Rotate left">&#8634;</button>
+            <button type="button" onclick="rotateSelected(10)" title="Rotate right">&#8635;</button>
+            <button type="button" onclick="resizeSelected(-4)" title="Smaller">&minus;</button>
+            <button type="button" onclick="resizeSelected(4)" title="Bigger">&plus;</button>
+            <button type="button" onclick="bringSelectedToFront()" title="Bring to front">&uarr;</button>
+            <button type="button" onclick="sendSelectedToBack()" title="Send to back">&darr;</button>
+            <button type="button" onclick="deleteSelectedPlacement()" title="Remove">&times;</button>
+          </div>
+        </div>
+        <div class="arrange-hint">Click a photo to select it, drag to move it. Click empty space to deselect.</div>
+        <div class="arrange-canvas-scroll">
+          <div class="arrange-canvas" id="arrangeCanvas" onclick="deselectArrangePhoto(event)">
+            <iframe class="bg-frame" id="arrangeFrame" sandbox="allow-same-origin" title="Post background"></iframe>
+            <div class="arrange-overlay" id="arrangeOverlay"></div>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-primary" id="postArrangePublishBtn" onclick="publishPost()">Publish memory</button>
+          <span class="form-msg" id="arrangeFormMsg"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIVITY VIEW -->
+    <div class="view" id="view-activity" style="display:none;">
+      <div class="view-head"><div><h2>Activity logs</h2><div class="sub">Who's been here, and when.</div></div></div>
+      <table class="log-table">
+        <thead><tr><th>Who</th><th>Action</th><th>When</th></tr></thead>
+        <tbody id="logTableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- PHOTO ALBUM VIEW -->
+    <div class="view" id="view-album" style="display:none;">
+
+      <div id="albumStepDetails">
+        <div class="view-head"><div><h2>Photo album</h2><div class="sub">A pure photo memory, bound like a little book. Choose a cover, add photos, then arrange the pages.</div></div></div>
+        <div class="album-form">
+          <div class="field"><label for="albumTitle">Title</label><input type="text" id="albumTitle" placeholder="e.g. Summer in Italy"></div>
+          <div class="field"><label for="albumDate">Date</label><input type="date" id="albumDate"></div>
+          <div class="style-panel">
+            <div class="style-panel-title">CHOOSE A COVER</div>
+            <div class="preset-row" id="coverThemeRow" style="grid-template-columns:repeat(4,1fr);"></div>
+          </div>
+          <div class="style-panel">
+            <div class="style-panel-title">PAGE BACKGROUND</div>
+            <div class="preset-row" id="pageBgRow" style="grid-template-columns:repeat(5,1fr);"></div>
+          </div>
+          <div class="photo-field">
+            <label>Photos &amp; videos</label>
+            <label class="photo-add-btn">📷 Add photo(s) or video(s)<input type="file" id="albumPhotoInput" accept="image/*,video/*" multiple onchange="handleAlbumPhotoSelect(event)"></label>
+            <div class="photo-hint">Up to 12 items — you'll arrange them onto pages next. Keep video clips short (under ~6MB) since everything is stored right in your browser.</div>
+            <div class="photo-thumbs" id="albumPhotoThumbs"></div>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn-primary" onclick="goToAlbumArrangeStep()">Next: arrange pages →</button>
+            <span class="form-msg" id="albumFormMsg"></span>
+          </div>
+        </div>
+      </div>
+
+      <div id="albumStepArrange" style="display:none;">
+        <div class="view-head">
+          <div><h2>Arrange your pages</h2><div class="sub">Drag photos into place on each page like a little collage. Switch pages with the tabs.</div></div>
+          <button class="step-back" onclick="backToAlbumDetails()">&larr; Back to details</button>
+        </div>
+        <div class="arrange-templates" id="albumPageTabs"></div>
+        <div class="canvas-toolbar">
+          <div class="grp">
+            <span class="lbl">Layout</span>
+            <button type="button" class="template-btn" onclick="applyPageTemplate('scattered')" style="border-radius:20px;">Scattered</button>
+            <button type="button" class="template-btn" onclick="applyPageTemplate('grid')" style="border-radius:20px;">Grid</button>
+            <button type="button" class="template-btn" onclick="applyPageTemplate('stack')" style="border-radius:20px;">Stack</button>
+            <button type="button" class="template-btn" onclick="applyPageTemplate('heart')" style="border-radius:20px;">Heart &#9829;</button>
+            <button type="button" class="template-btn" onclick="applyPageTemplate('circle')" style="border-radius:20px;">Circle</button>
+          </div>
+          <div class="grp" id="albumArrangeToolbar">
+            <span class="lbl">Selected photo</span>
+            <button type="button" onclick="rotateSelectedAlbumPhoto(-10)" title="Rotate left">&#8634;</button>
+            <button type="button" onclick="rotateSelectedAlbumPhoto(10)" title="Rotate right">&#8635;</button>
+            <button type="button" onclick="resizeSelectedAlbumPhoto(-4)" title="Smaller">&minus;</button>
+            <button type="button" onclick="resizeSelectedAlbumPhoto(4)" title="Bigger">&plus;</button>
+            <button type="button" onclick="bringSelectedAlbumPhotoFront()" title="Bring to front">&uarr;</button>
+            <button type="button" onclick="sendSelectedAlbumPhotoBack()" title="Send to back">&darr;</button>
+            <button type="button" onclick="moveSelectedAlbumPhoto(-1)" title="Move to previous page">&laquo;</button>
+            <button type="button" onclick="moveSelectedAlbumPhoto(1)" title="Move to next page">&raquo;</button>
+            <button type="button" onclick="deleteSelectedAlbumPhoto()" title="Remove">&times;</button>
+          </div>
+        </div>
+        <div class="arrange-hint">Click a photo to select it, drag to move it. Click empty space to deselect.</div>
+        <div class="arrange-canvas-scroll">
+          <div class="arrange-canvas" id="albumCanvas" style="height:440px;" onclick="deselectAlbumPhoto(event)">
+            <div class="arrange-overlay" id="albumOverlay"></div>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-primary" onclick="publishAlbum()">Publish photo memory</button>
+          <span class="form-msg" id="albumArrangeMsg"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TIMELINE VIEW -->
+    <div class="view" id="view-timeline" style="display:none;">
+      <div class="view-head"><div><h2>Timeline</h2><div class="sub">Every memory, grouped by month.</div></div></div>
+      <div id="timelineList"></div>
+    </div>
+
+    <!-- MILESTONES VIEW -->
+    <div class="view" id="view-milestones" style="display:none;">
+      <div class="view-head"><div><h2>Milestones</h2><div class="sub">The dates worth counting down to — or counting up from.</div></div></div>
+      <div class="album-form" style="margin-bottom:30px;">
+        <div class="style-row">
+          <div class="field" style="flex:2;"><label for="milestoneLabel">What's the occasion?</label><input type="text" id="milestoneLabel" placeholder="e.g. Anniversary, First date"></div>
+          <div class="field"><label for="milestoneDate">Date</label><input type="date" id="milestoneDate"></div>
+        </div>
+        <label class="milestone-recurring-check"><input type="checkbox" id="milestoneRecurring"> Repeats every year (anniversaries, birthdays)</label>
+        <button type="button" class="btn-primary" style="width:auto;padding:11px 24px;" onclick="addMilestone()">Add milestone</button>
+        <span class="form-msg" id="milestoneMsg"></span>
+      </div>
+      <div class="milestone-list" id="milestoneList"></div>
+    </div>
+
+    <!-- CALENDAR VIEW -->
+    <div class="view" id="view-calendar" style="display:none;">
+      <div class="view-head"><div><h2>Calendar</h2><div class="sub">Plan things together, day by day.</div></div></div>
+      <div class="cal-toolbar">
+        <button type="button" class="step-back" style="font-size:18px;padding:4px 10px;" onclick="changeCalendarMonth(-1)">&larr;</button>
+        <div class="cal-month-label" id="calendarMonthLabel"></div>
+        <button type="button" class="step-back" style="font-size:18px;padding:4px 10px;" onclick="changeCalendarMonth(1)">&rarr;</button>
+        <button type="button" class="btn-secondary" style="margin-left:8px;" onclick="goToCalendarToday()">Today</button>
+      </div>
+      <div class="cal-layout">
+        <div class="cal-grid" id="calendarGrid"></div>
+        <div class="cal-day-panel" id="calendarDayPanel"></div>
+      </div>
+    </div>
+
+    <!-- ALL PHOTOS VIEW -->
+    <div class="view" id="view-allphotos" style="display:none;">
+      <div class="view-head"><div><h2>All photos</h2><div class="sub">Every photo from every memory, in one place.</div></div></div>
+      <div class="all-photos-grid" id="allPhotosGrid"></div>
+    </div>
+
+    <!-- LOVE LETTERS / TIME CAPSULES VIEW -->
+    <div class="view" id="view-capsules" style="display:none;">
+      <div class="view-head"><div><h2>Love letters</h2><div class="sub">Write something now that stays sealed until a date you choose.</div></div></div>
+      <div class="album-form" style="margin-bottom:30px;">
+        <div class="field"><label for="capsuleTitle">Title</label><input type="text" id="capsuleTitle" placeholder="e.g. Open on our 5th anniversary"></div>
+        <div class="field"><label for="capsuleUnlock">Unlock date</label><input type="date" id="capsuleUnlock"></div>
+        <div class="field"><label for="capsuleText">Your letter</label><textarea id="capsuleText" class="html-editor" style="min-height:160px;font-family:var(--sans);font-size:14px;" placeholder="Dear you..."></textarea></div>
+        <button type="button" class="btn-primary" style="width:auto;padding:11px 24px;" onclick="addCapsule()">Seal it</button>
+        <span class="form-msg" id="capsuleMsg"></span>
+      </div>
+      <div class="capsule-list" id="capsuleList"></div>
+    </div>
+
+    <!-- BUCKET LIST VIEW -->
+    <div class="view" id="view-bucketlist" style="display:none;">
+      <div class="view-head"><div><h2>Bucket list</h2><div class="sub">Things to do together, one day.</div></div></div>
+      <div class="album-form" style="margin-bottom:26px;">
+        <div class="field"><label for="bucketTitleInput">What's the goal?</label><input type="text" id="bucketTitleInput" placeholder="e.g. Watch the Northern Lights together"></div>
+        <div class="field"><label for="bucketContentInput">Tell us more (optional)</label><textarea id="bucketContentInput" class="html-editor" style="min-height:80px;font-family:var(--sans);font-size:14px;" placeholder="Any details, ideas, or why it matters..."></textarea></div>
+        <button type="button" class="btn-primary" style="width:auto;padding:11px 24px;" onclick="addBucketItem()">Add to the list</button>
+        <span class="form-msg" id="bucketFormMsg"></span>
+      </div>
+      <div class="bucket-list" id="bucketList"></div>
+    </div>
+
+    <!-- DAILY QUESTION VIEW -->
+    <div class="view" id="view-daily" style="display:none;">
+      <div class="view-head"><div><h2>Daily question</h2><div class="sub">A new little prompt each day, for both of you to answer.</div></div></div>
+      <div class="daily-question-card" id="dailyQuestionCard"></div>
+    </div>
+
+    <!-- SETTINGS VIEW -->
+    <div class="view" id="view-settings" style="display:none;">
+      <div class="view-head"><div><h2>Settings</h2><div class="sub">A little bit about the two of you.</div></div></div>
+
+      <div class="style-panel" style="max-width:640px;">
+        <div class="style-panel-title">MY PROFILE</div>
+        <div class="field"><label for="profileNickname">Nickname</label><input type="text" id="profileNickname" placeholder="What should we call you?"></div>
+        <label style="display:block;font-size:12.5px;font-weight:600;color:var(--text-muted-on-paper);margin-bottom:7px;">Avatar</label>
+        <div class="preset-row" id="avatarEmojiRow" style="grid-template-columns:repeat(6,1fr);margin-bottom:14px;"></div>
+        <label class="photo-add-btn">📷 Or upload your own photo<input type="file" id="avatarPhotoInput" accept="image/*" onchange="handleAvatarPhotoUpload(event)"></label>
+        <div class="photo-thumbs" id="avatarPhotoThumb" style="margin-top:10px;"></div>
+        <button type="button" class="btn-primary" style="width:auto;padding:11px 24px;margin-top:16px;" onclick="saveProfile()">Save profile</button>
+        <span class="form-msg" id="profileMsg"></span>
+      </div>
+
+      <div class="style-panel" style="max-width:640px;">
+        <div class="style-panel-title">CHANGE PASSWORD</div>
+        <div class="field"><label for="pwCurrent">Current password</label><input type="password" id="pwCurrent"></div>
+        <div class="field"><label for="pwNew">New password</label><input type="password" id="pwNew"></div>
+        <div class="field"><label for="pwConfirm">Confirm new password</label><input type="password" id="pwConfirm"></div>
+        <button type="button" class="btn-primary" style="width:auto;padding:11px 24px;" onclick="changePassword()">Update password</button>
+        <span class="form-msg" id="pwMsg"></span>
+      </div>
+
+      <div class="style-panel" style="max-width:640px;">
+        <div class="style-panel-title">INVITE YOUR PARTNER</div>
+        <div class="theme-hint">Generate a link and send it to your partner however you like — text, email, whatever's easiest.</div>
+        <div id="inviteStatus"></div>
+        <button type="button" class="btn-primary" style="width:auto;padding:11px 24px;" onclick="createInvite()">Generate invite link</button>
+      </div>
+
+      <div class="album-form">
+        <div class="field"><label for="settingsCoupleName">Couple name</label><input type="text" id="settingsCoupleName" placeholder="e.g. Alex &amp; Sam"></div>
+        <div class="field"><label for="settingsAbout">About us</label><textarea id="settingsAbout" class="html-editor" style="min-height:100px;font-family:var(--sans);font-size:14px;" placeholder="A little blurb about your story..."></textarea></div>
+        <button type="button" class="btn-primary" style="width:auto;padding:11px 24px;" onclick="saveSettings()">Save</button>
+        <span class="form-msg" id="settingsMsg"></span>
+      </div>
+      <div class="style-panel" style="max-width:640px;">
+        <div class="style-panel-title">APP THEME</div>
+        <div class="theme-hint">Pick the colors that feel like the two of you — this changes the whole app, right down to the login screen.</div>
+        <div class="preset-row" id="appThemeRow" style="grid-template-columns:repeat(3,1fr);"></div>
+        <div class="custom-theme-panel" id="customThemePanel" style="display:none;">
+          <div class="style-row">
+            <div class="field color-field"><label for="customPaper">Paper (main background)</label><input type="color" id="customPaper" value="#F3ECDD"></div>
+            <div class="field color-field"><label for="customInk">Ink (sidebar &amp; dark areas)</label><input type="color" id="customInk" value="#211A24"></div>
+          </div>
+          <div class="style-row">
+            <div class="field color-field"><label for="customRose">Accent (buttons &amp; highlights)</label><input type="color" id="customRose" value="#C17B84"></div>
+            <div class="field color-field"><label for="customGold">Detail (dates &amp; small touches)</label><input type="color" id="customGold" value="#C7A15A"></div>
+          </div>
+          <button type="button" class="btn-secondary" onclick="applyCustomThemeFromInputs()">Apply custom theme</button>
+          <div class="theme-hint" style="margin-top:10px;margin-bottom:14px;">These 4 colors are yours to pick. Text colors are auto-adjusted for readability, and fonts, layout, photo frames and the cover illustrations stay fixed.</div>
+
+          <div class="photo-field" style="border-top:1px solid var(--paper-2);padding-top:14px;">
+            <label>Background photo (optional)</label>
+            <label class="photo-add-btn">📷 Upload background<input type="file" id="customBgInput" accept="image/*" onchange="handleCustomBgUpload(event)"></label>
+            <div class="photo-hint">Shows softly behind the app, tinted with your colors so text stays readable. Uses up local storage space like any other photo.</div>
+            <div class="photo-thumbs" id="customBgThumb"></div>
+            <div class="field" style="margin-top:14px;">
+              <label for="customBgStrength">Photo strength</label>
+              <input type="range" id="customBgStrength" min="10" max="70" value="35" oninput="previewCustomBgStrength()" style="width:100%;">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-head-text"><div class="modal-date" id="modalDate"></div><div class="modal-title" id="modalTitle"></div></div>
+      <div class="modal-head-actions">
+        <button type="button" class="modal-action-btn" id="modalEditBtn" onclick="editCurrentPost()" style="display:none;" title="Edit">✏️</button>
+        <button type="button" class="modal-action-btn" id="modalDeleteBtn" onclick="deleteCurrentItem()" title="Delete">🗑️</button>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+    </div>
+    <div class="modal-frame-wrap" id="modalFrameWrap"></div>
+    <div class="modal-notes">
+      <div class="modal-notes-top">
+        <div class="reactions-row" id="modalReactionsRow"></div>
+        <button type="button" class="pin-btn" id="modalPinBtn" onclick="togglePinCurrentItem()">☆ Pin</button>
+      </div>
+      <div class="modal-notes-list" id="modalNotesList"></div>
+      <div class="modal-notes-add">
+        <input type="text" id="modalNoteInput" placeholder="Leave a little note..." onkeydown="if(event.key==='Enter')addNoteToCurrentItem()">
+        <button type="button" class="btn-secondary" onclick="addNoteToCurrentItem()">Send</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="preview-float" id="previewFloat"></div>
+
+<script>
+/* ===================================================================
+   STORAGE
+=================================================================== */
+const K_USERS = 'us_journal_users';
+const K_SESSION = 'us_journal_session';
+const K_POSTS = 'us_journal_posts';
+const K_LOGS = 'us_journal_logs';
+const K_ALBUMS = 'us_journal_albums';
+
+function loadJSON(key, fallback){
+  try{ const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
+  catch(e){ return fallback; }
+}
+function saveJSON(key, val){
+  try{ localStorage.setItem(key, JSON.stringify(val)); return true; }
+  catch(e){ console.error('storage error', e); return false; }
+}
+
+function seedIfNeeded(){
+  let users = loadJSON(K_USERS, null);
+  if(!users){
+    users = [{ username:'admin', password:'admin', email:'admin@example.com', createdAt: Date.now() }];
+    saveJSON(K_USERS, users);
+  }
+  let posts = loadJSON(K_POSTS, null);
+  if(!posts){
+    posts = [
+      { id:'p1', type:'post', title:'The rainy afternoon in Kyoto', date:'2026-03-14', author:'admin',
+        content:'<h1>We got lost on purpose.</h1><p>The map said one thing, the rain said another. We ducked into a tiny shop that sold nothing but umbrellas and old postcards, and stayed twenty minutes longer than we needed to.</p>',
+        css:'body{font-family:Georgia,serif;padding:32px;color:#2B2230;} h1{font-size:26px;margin:0 0 14px;} p{font-size:17px;line-height:1.75;}',
+        createdAt: Date.now()-86400000*40 },
+      { id:'p2', type:'post', title:'First apartment, first plant we killed', date:'2026-05-02', author:'admin',
+        content:'<div style="text-align:center"><h2>R.I.P. Gerald the Fern</h2><p>2026 – 2026</p><p style="max-width:420px;margin:0 auto;">He never stood a chance, but the windowsill looked nice for three weeks.</p></div>',
+        css:'body{font-family:Karla,sans-serif;background:#F3ECDD;padding:40px;color:#2B2230;} h2{font-family:Georgia,serif;font-style:italic;}',
+        createdAt: Date.now()-86400000*10 }
+    ];
+    saveJSON(K_POSTS, posts);
+  }
+  let logs = loadJSON(K_LOGS, null);
+  if(!logs){ saveJSON(K_LOGS, []); }
+  let albums = loadJSON(K_ALBUMS, null);
+  if(!albums){ saveJSON(K_ALBUMS, []); }
+}
+
+function getSession(){ return localStorage.getItem(K_SESSION); }
+function setSession(username){ localStorage.setItem(K_SESSION, username); }
+function clearSession(){ localStorage.removeItem(K_SESSION); }
+function addLog(username, action){
+  const logs = loadJSON(K_LOGS, []);
+  logs.unshift({ username, action, time: Date.now() });
+  saveJSON(K_LOGS, logs);
+}
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+}
+function stripTags(html){
+  const div = document.createElement('div'); div.innerHTML = html;
+  return (div.textContent || div.innerText || '').trim();
+}
+function formatDate(iso){
+  if(!iso) return '';
+  const d = new Date(iso+'T00:00:00');
+  if(isNaN(d)) return iso;
+  return d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
+}
+function styleArrangeEl(el, p){
+  el.style.left = p.xPct+'%'; el.style.top = p.yPct+'%'; el.style.width = p.wPct+'%';
+  el.style.transform = `rotate(${p.rot}deg)`;
+  const isVideo = p.type === 'video';
+  const fillStyle = p.hPct ? 'width:100%;height:100%;object-fit:cover;' : 'width:100%;height:auto;display:block;';
+  el.style.height = p.hPct ? p.hPct+'%' : '';
+  el.innerHTML = isVideo
+    ? `<video src="${p.dataUrl}" autoplay muted loop playsinline draggable="false" style="${fillStyle}border-radius:4px;box-shadow:0 10px 22px -10px rgba(20,14,22,.45);"></video>`
+    : `<img src="${p.dataUrl}" alt="" draggable="false" style="${fillStyle.replace('display:block;','')}">`;
+}
+
+/* ===================================================================
+   AUTH
+=================================================================== */
+function switchAuthTab(which){
+  document.getElementById('tabLogin').classList.toggle('active', which==='login');
+  document.getElementById('tabRegister').classList.toggle('active', which==='register');
+  document.getElementById('loginForm').style.display = which==='login' ? 'block' : 'none';
+  document.getElementById('registerForm').style.display = which==='register' ? 'block' : 'none';
+  document.getElementById('loginError').textContent='';
+  document.getElementById('registerError').textContent='';
+}
+function handleLogin(e){
+  e.preventDefault();
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  const users = loadJSON(K_USERS, []);
+  const match = users.find(x => x.username.toLowerCase() === u.toLowerCase() && x.password === p);
+  if(!match){ document.getElementById('loginError').textContent = "That username and password don't match."; return false; }
+  setSession(match.username);
+  addLog(match.username, 'Logged in');
+  enterApp();
+  return false;
+}
+function handleRegister(e){
+  e.preventDefault();
+  const u = document.getElementById('regUser').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const p = document.getElementById('regPass').value;
+  const p2 = document.getElementById('regPass2').value;
+  const errEl = document.getElementById('registerError');
+  if(p !== p2){ errEl.textContent = "Passwords don't match."; return false; }
+  if(p.length < 4){ errEl.textContent = 'Password should be at least 4 characters.'; return false; }
+  const users = loadJSON(K_USERS, []);
+  if(users.some(x => x.username.toLowerCase() === u.toLowerCase())){ errEl.textContent = 'That username is already taken.'; return false; }
+  users.push({ username:u, password:p, email, createdAt: Date.now() });
+  saveJSON(K_USERS, users);
+  if(pendingInviteCode){
+    const invites = loadJSON(K_INVITES, []);
+    const inv = invites.find(i=>i.code===pendingInviteCode);
+    if(inv){
+      inv.used = true;
+      inv.acceptedBy = u;
+      saveJSON(K_INVITES, invites);
+      addLog(u, 'Accepted an invite from '+getDisplayName(inv.invitedBy));
+    }
+    pendingInviteCode = null;
+  }
+  setSession(u);
+  addLog(u, 'Registered & logged in');
+  enterApp();
+  return false;
+}
+function handleLogout(){
+  const u = getSession();
+  if(u) addLog(u, 'Logged out');
+  clearSession();
+  document.getElementById('appScreen').style.display='none';
+  document.getElementById('authScreen').style.display='grid';
+  document.getElementById('loginForm').reset();
+  switchAuthTab('login');
+}
+
+/* ===================================================================
+   APP SHELL
+=================================================================== */
+function enterApp(){
+  document.getElementById('authScreen').style.display='none';
+  document.getElementById('appScreen').style.display='block';
+  document.getElementById('sidebarUsername').innerHTML = getAvatarHtml(getSession(), 20) + ' ' + escapeHtml(getDisplayName(getSession()));
+  const today = new Date();
+  document.getElementById('todayLabel').textContent = today.toLocaleDateString(undefined,{weekday:'long', year:'numeric', month:'long', day:'numeric'});
+  document.getElementById('postDate').value = today.toISOString().slice(0,10);
+  document.getElementById('albumDate').value = today.toISOString().slice(0,10);
+  applySettingsToBrand();
+  switchView('memories');
+  renderNotifBadge();
+}
+function switchView(view){
+  ['memories','newpost','activity','album','timeline','milestones','calendar','allphotos','capsules','bucketlist','daily','settings'].forEach(v=>{
+    document.getElementById('view-'+v).style.display = v===view ? 'block' : 'none';
+  });
+  document.querySelectorAll('.nav-btn').forEach(b=> b.classList.toggle('active', b.getAttribute('data-view')===view));
+  updateSidebarPin(view);
+  renderNotifBadge();
+  if(view==='memories'){ renderMemories(); loadSpotifySetting(); }
+  if(view==='activity') renderActivity();
+  if(view==='newpost'){ document.getElementById('postStepWrite').style.display='block'; document.getElementById('postStepArrange').style.display='none'; updatePostPreview(); }
+  if(view==='album'){
+    document.getElementById('albumStepDetails').style.display = 'block';
+    document.getElementById('albumStepArrange').style.display = 'none';
+    renderAlbumThumbs();
+    renderCoverThemeRow();
+    renderPageBgRow();
+  }
+  if(view==='timeline') renderTimeline();
+  if(view==='milestones') renderMilestones();
+  if(view==='calendar') renderCalendar();
+  if(view==='allphotos') renderAllPhotos();
+  if(view==='capsules') renderCapsules();
+  if(view==='bucketlist') renderBucketList();
+  if(view==='daily') renderDailyQuestion();
+  if(view==='settings') renderSettings();
+}
+
+/* ===================================================================
+   MEMORIES (merged posts + albums)
+=================================================================== */
+const CARD_COLORS = ['#C17B84','#9C5C68','#C7A15A','#6E6270','#382D3D'];
+let memoriesFilter = 'all';
+let memoriesSearchQuery = '';
+let timelineMonthFilter = null;
+
+function setMemoriesFilter(filter){
+  memoriesFilter = filter;
+  timelineMonthFilter = null;
+  document.querySelectorAll('.mem-tab').forEach(b=> b.classList.toggle('active', b.getAttribute('data-filter')===filter));
+  renderMemories();
+}
+function handleMemSearch(){
+  memoriesSearchQuery = document.getElementById('memSearchInput').value.trim().toLowerCase();
+  timelineMonthFilter = null;
+  renderMemories();
+}
+function clearTimelineFilter(){
+  timelineMonthFilter = null;
+  renderMemories();
+}
+
+let _onThisDayMatches = [];
+function renderOnThisDay(){
+  const banner = document.getElementById('onThisDayBanner');
+  if(!banner) return;
+  const today = new Date();
+  const mm = today.getMonth()+1, dd = today.getDate();
+  const items = loadJSON(K_POSTS, []).concat(loadJSON(K_ALBUMS, []));
+  const matches = items.filter(item=>{
+    if(!item.date) return false;
+    const d = new Date(item.date+'T00:00:00');
+    if(isNaN(d)) return false;
+    return (d.getMonth()+1)===mm && d.getDate()===dd && d.getFullYear() < today.getFullYear();
+  }).sort((a,b)=> new Date(b.date) - new Date(a.date));
+  _onThisDayMatches = matches;
+  if(matches.length===0){ banner.style.display='none'; banner.innerHTML=''; return; }
+  const first = matches[0];
+  const yearsAgo = today.getFullYear() - new Date(first.date+'T00:00:00').getFullYear();
+  const moreText = matches.length>1 ? `<span class="otd-more">+${matches.length-1} more from other years</span>` : '';
+  banner.style.display = 'flex';
+  banner.innerHTML = `<div class="otd-icon">📅</div><div class="otd-text"><b>On this day</b>, ${yearsAgo} year${yearsAgo===1?'':'s'} ago — "${escapeHtml(first.title)}" ${moreText}</div>`;
+}
+function surpriseMeMemory(){
+  const items = loadJSON(K_POSTS, []).concat(loadJSON(K_ALBUMS, []));
+  if(items.length===0) return;
+  const pick = items[Math.floor(Math.random()*items.length)];
+  openModal(pick);
+}
+
+function renderMemories(){
+  renderOnThisDay();
+  const posts = loadJSON(K_POSTS, []);
+  const albums = loadJSON(K_ALBUMS, []);
+  let items = posts.concat(albums).sort((a,b)=>{
+    const pa = a.pinned ? 1 : 0, pb = b.pinned ? 1 : 0;
+    if(pa !== pb) return pb - pa;
+    return (b.createdAt||0)-(a.createdAt||0);
+  });
+  const totalCount = items.length;
+  if(memoriesFilter !== 'all'){
+    items = items.filter(item => item.type === memoriesFilter);
+  }
+  if(memoriesSearchQuery){
+    items = items.filter(item => item.title.toLowerCase().includes(memoriesSearchQuery));
+  }
+  const banner = document.getElementById('timelineFilterBanner');
+  if(banner){
+    if(timelineMonthFilter){
+      items = items.filter(item=>{
+        if(!item.date) return false;
+        const d = new Date(item.date+'T00:00:00');
+        if(isNaN(d)) return false;
+        const key = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+        return key === timelineMonthFilter;
+      });
+      const d = new Date(timelineMonthFilter+'-01T00:00:00');
+      banner.style.display = 'flex';
+      banner.innerHTML = `Showing <b>${d.toLocaleDateString(undefined,{month:'long',year:'numeric'})}</b> <button type="button" onclick="clearTimelineFilter()">&times; clear</button>`;
+    } else {
+      banner.style.display = 'none';
+      banner.innerHTML = '';
+    }
+  }
+  const grid = document.getElementById('memoriesGrid');
+  grid.innerHTML='';
+  if(totalCount===0){ grid.innerHTML = '<div class="mem-empty">Nothing written yet — your first memory is one click away.</div>'; return; }
+  if(items.length===0){ grid.innerHTML = '<div class="mem-empty">No memories match that search.</div>'; return; }
+  items.forEach((item, i)=>{
+    const isAlbum = item.type === 'album';
+    const card = document.createElement('div');
+    card.className='mem-card';
+    const color = CARD_COLORS[i % CARD_COLORS.length];
+    const dateLabel = formatDate(item.date);
+    let thumbStyle, thumbInner;
+    if(isAlbum){
+      const theme = COVER_THEMES.find(t=>t.id === (item.cover && item.cover.theme)) || COVER_THEMES[0];
+      thumbStyle = `background:${theme.gradient};`;
+      thumbInner = `<div style="width:56px;height:42px;">${theme.svg}</div>`;
+    } else {
+      thumbStyle = `background:linear-gradient(150deg, ${color}, #211A24);`;
+      thumbInner = escapeHtml(item.title.slice(0,1).toUpperCase());
+    }
+    migrateReactions(item);
+    const reactions = item.reactions || {};
+    const reactionSummary = REACTION_EMOJIS
+      .map(e => (reactions[e] && reactions[e].length) ? e + reactions[e].length : '')
+      .filter(Boolean).join(' ');
+    card.innerHTML = `
+      <button type="button" class="mem-pin-btn${item.pinned?' pinned':''}" title="${item.pinned?'Unpin':'Pin to top'}" onclick="quickTogglePin(event,'${item.id}','${item.type}')">${item.pinned?'★':'☆'}</button>
+      <div class="mem-thumb" style="${thumbStyle}"><div class="mem-kind-tag">${isAlbum?'PHOTO MEMORY':'MEMORY'}</div>${thumbInner}</div>
+      <div class="mem-date">${dateLabel}</div>
+      <div class="mem-title">${escapeHtml(item.title)}</div>
+      <div class="mem-author">${getAvatarHtml(item.author,16)} by ${escapeHtml(getDisplayName(item.author))}${reactionSummary?`<span class="mem-heart-count">${reactionSummary}</span>`:''}</div>
+    `;
+    const pageCount = isAlbum ? (item.pages ? item.pages.length : 0) : 0;
+    const excerpt = isAlbum ? (pageCount + ' page' + (pageCount===1?'':'s')) : stripTags(item.content).slice(0,110);
+    card.addEventListener('mouseenter', (ev)=> showPreview(ev, item.title, excerpt));
+    card.addEventListener('mousemove', movePreview);
+    card.addEventListener('mouseleave', hidePreview);
+    card.addEventListener('click', ()=> openModal(item));
+    grid.appendChild(card);
+  });
+}
+
+const previewFloat = document.getElementById('previewFloat');
+function showPreview(ev, title, excerpt){
+  previewFloat.innerHTML = `<b>${escapeHtml(title)}</b>${escapeHtml(excerpt)}${excerpt.length>=110?'…':''}`;
+  previewFloat.classList.add('show');
+  movePreview(ev);
+}
+function movePreview(ev){
+  const pad=18;
+  let x = ev.clientX + pad, y = ev.clientY + pad;
+  if(x + 270 > window.innerWidth) x = ev.clientX - 270 - pad;
+  if(y + 180 > window.innerHeight) y = ev.clientY - 180 - pad;
+  previewFloat.style.left = x+'px'; previewFloat.style.top = y+'px';
+}
+function hidePreview(){ previewFloat.classList.remove('show'); }
+
+/* ===================================================================
+   MODAL / VIEWER
+=================================================================== */
+function buildPostDoc(content, css){
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+    body{margin:0;font-family:Karla,sans-serif;color:#2B2230;background:#fff;padding:28px;}
+    body:after{content:'';display:table;clear:both;}
+    img{max-width:100%;}
+    p{margin:0 0 1em;}
+    ${css||''}
+  </style></head><body>${content||''}</body></html>`;
+}
+
+let currentModalItem = null;
+
+function openModal(item){
+  currentModalItem = item;
+  document.getElementById('modalTitle').textContent = item.title;
+  document.getElementById('modalDate').textContent = formatDate(item.date)+' · by '+getDisplayName(item.author);
+  renderPostViewer(document.getElementById('modalFrameWrap'), item);
+  renderModalNotes(item);
+  document.getElementById('modalEditBtn').style.display = item.type==='post' ? 'inline-flex' : 'none';
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('modalOverlay').classList.remove('open');
+  currentModalItem = null;
+}
+function deleteCurrentItem(){
+  if(!currentModalItem) return;
+  const item = currentModalItem;
+  const label = item.type==='album' ? 'photo album' : 'memory';
+  if(!confirm('Delete this '+label+' — "'+item.title+'"? This cannot be undone.')) return;
+  const key = getStoreKeyForType(item.type);
+  saveJSON(key, loadJSON(key, []).filter(x=>x.id!==item.id));
+  addLog(getSession(), 'Deleted "'+item.title+'"');
+  closeModal();
+  renderMemories();
+  renderNotifBadge();
+}
+
+function getStoreKeyForType(type){ return type === 'album' ? K_ALBUMS : K_POSTS; }
+function updateStoredItem(item, mutator){
+  const key = getStoreKeyForType(item.type);
+  const list = loadJSON(key, []);
+  const idx = list.findIndex(x=>x.id===item.id);
+  if(idx===-1) return null;
+  mutator(list[idx]);
+  saveJSON(key, list);
+  return list[idx];
+}
+const REACTION_EMOJIS = ['❤️','😂','😢','🥹'];
+
+function migrateReactions(it){
+  if(it.reactions && it.reactions.loveBy && !it.reactions['❤️']){
+    it.reactions['❤️'] = it.reactions.loveBy;
+    delete it.reactions.loveBy;
+  }
+}
+
+function renderModalNotes(item){
+  migrateReactions(item);
+  const reactions = item.reactions || {};
+  const row = document.getElementById('modalReactionsRow');
+  row.innerHTML = '';
+  REACTION_EMOJIS.forEach(emo=>{
+    const users = reactions[emo] || [];
+    const mine = users.includes(getSession());
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'reaction-btn' + (mine ? ' active' : '');
+    btn.textContent = emo + ' ' + users.length;
+    btn.onclick = ()=> toggleReaction(emo);
+    row.appendChild(btn);
+  });
+  const pinBtn = document.getElementById('modalPinBtn');
+  pinBtn.innerHTML = item.pinned ? '★ Pinned' : '☆ Pin';
+  pinBtn.classList.toggle('active', !!item.pinned);
+
+  const notes = item.notes || [];
+  const list = document.getElementById('modalNotesList');
+  list.innerHTML = '';
+  if(notes.length===0){
+    list.innerHTML = '<div class="notes-empty">No notes yet — leave the first one.</div>';
+  } else {
+    notes.forEach(n=>{
+      const d = new Date(n.time);
+      const el = document.createElement('div');
+      el.className = 'note-item';
+      el.innerHTML = `<div class="note-head"><b>${getAvatarHtml(n.username,15)} ${escapeHtml(getDisplayName(n.username))}</b><span>${d.toLocaleDateString()}</span></div><div class="note-text">${escapeHtml(n.text)}</div>`;
+      list.appendChild(el);
+    });
+    list.scrollTop = list.scrollHeight;
+  }
+}
+function toggleReaction(emoji){
+  if(!currentModalItem) return;
+  const updated = updateStoredItem(currentModalItem, (it)=>{
+    migrateReactions(it);
+    if(!it.reactions) it.reactions = {};
+    if(!it.reactions[emoji]) it.reactions[emoji] = [];
+    const u = getSession();
+    const idx = it.reactions[emoji].indexOf(u);
+    if(idx>-1){
+      it.reactions[emoji].splice(idx,1);
+    } else {
+      it.reactions[emoji].push(u);
+      if(!it.reactionEvents) it.reactionEvents = [];
+      it.reactionEvents.push({ emoji, username:u, time:Date.now() });
+      if(it.reactionEvents.length>50) it.reactionEvents = it.reactionEvents.slice(-50);
+    }
+  });
+  if(updated){ currentModalItem = updated; renderModalNotes(updated); renderMemories(); renderNotifBadge(); }
+}
+function togglePinCurrentItem(){
+  if(!currentModalItem) return;
+  const updated = updateStoredItem(currentModalItem, (it)=>{ it.pinned = !it.pinned; });
+  if(updated){ currentModalItem = updated; renderModalNotes(updated); renderMemories(); }
+}
+function addNoteToCurrentItem(){
+  const input = document.getElementById('modalNoteInput');
+  const text = input.value.trim();
+  if(!text || !currentModalItem) return;
+  const updated = updateStoredItem(currentModalItem, (it)=>{
+    if(!it.notes) it.notes = [];
+    it.notes.push({ username: getSession(), text, time: Date.now() });
+  });
+  if(updated){
+    currentModalItem = updated;
+    input.value = '';
+    renderModalNotes(updated);
+    addLog(getSession(), 'Left a note on "'+updated.title+'"');
+  }
+}
+function quickTogglePin(ev, id, type){
+  ev.stopPropagation();
+  const key = getStoreKeyForType(type);
+  const list = loadJSON(key, []);
+  const idx = list.findIndex(x=>x.id===id);
+  if(idx===-1) return;
+  list[idx].pinned = !list[idx].pinned;
+  saveJSON(key, list);
+  renderMemories();
+}
+
+function renderPostViewer(container, item){
+  container.innerHTML = '';
+  if(item.type === 'album'){
+    renderBookViewer(container, item);
+    return;
+  }
+  if(item.photoCanvas && item.photoCanvas.photos && item.photoCanvas.photos.length){
+    const wrap = document.createElement('div');
+    wrap.className = 'photo-canvas-wrap';
+    wrap.style.height = item.photoCanvas.heightPx + 'px';
+    const frame = document.createElement('iframe');
+    frame.className='post-render-frame';
+    frame.setAttribute('sandbox','');
+    frame.style.height='100%';
+    frame.srcdoc = buildPostDoc(item.content, item.css);
+    wrap.appendChild(frame);
+    const overlay = document.createElement('div');
+    overlay.className = 'arrange-overlay';
+    item.photoCanvas.photos.forEach(p=>{
+      const el = document.createElement('div');
+      el.className = 'arrange-photo view-only';
+      styleArrangeEl(el, p);
+      overlay.appendChild(el);
+    });
+    wrap.appendChild(overlay);
+    container.appendChild(wrap);
+  } else {
+    const frame = document.createElement('iframe');
+    frame.className='post-render-frame';
+    frame.setAttribute('sandbox','');
+    frame.srcdoc = buildPostDoc(item.content, item.css);
+    container.appendChild(frame);
+  }
+}
+
+function playPageFlipSound(){
+  try{
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const duration = 0.35;
+    const bufferSize = Math.floor(ctx.sampleRate * duration);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i=0; i<bufferSize; i++){
+      data[i] = (Math.random()*2-1) * Math.pow(1 - i/bufferSize, 2);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(2600, ctx.currentTime);
+    filter.frequency.exponentialRampToValueAtTime(900, ctx.currentTime + duration);
+    filter.Q.value = 0.8;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.12, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    noise.connect(filter).connect(gain).connect(ctx.destination);
+    noise.start();
+    noise.stop(ctx.currentTime + duration);
+  }catch(e){ /* Web Audio unavailable — fail silently */ }
+}
+function renderBookViewer(container, album){
+  const pages = (album.pages && album.pages.length) ? album.pages : [{photos:[],heightPx:400}];
+  let pageIdx = 0;
+
+  const stage = document.createElement('div');
+  stage.className = 'book-stage';
+  const book = document.createElement('div');
+  book.className = 'book';
+  const theme = COVER_THEMES.find(t=>t.id === (album.cover && album.cover.theme)) || COVER_THEMES[0];
+  const pageBg = PAGE_BACKGROUNDS.find(b=>b.id === album.pageBackground) || PAGE_BACKGROUNDS[0];
+
+  const cover = document.createElement('div');
+  cover.className = 'book-cover';
+  cover.style.background = theme.gradient;
+  cover.innerHTML = `${theme.svg}<div class="book-cover-title">${escapeHtml(album.title)}</div><div class="book-cover-date">${formatDate(album.date)}</div>`;
+
+  const pagesWrap = document.createElement('div');
+  pagesWrap.className = 'book-pages-wrap';
+
+  book.appendChild(cover);
+  book.appendChild(pagesWrap);
+  stage.appendChild(book);
+  container.appendChild(stage);
+
+  function renderPage(i, playSound){
+    pageIdx = Math.max(0, Math.min(pages.length-1, i));
+    if(playSound) playPageFlipSound();
+    pagesWrap.innerHTML = '';
+    const page = pages[pageIdx];
+    const pageEl = document.createElement('div');
+    pageEl.className = 'book-page';
+    pageEl.style.background = pageBg.css;
+    (page.photos||[]).forEach(p=>{
+      const el = document.createElement('div');
+      el.className = 'arrange-photo view-only';
+      styleArrangeEl(el, p);
+      pageEl.appendChild(el);
+    });
+    pagesWrap.appendChild(pageEl);
+
+    const nav = document.createElement('div');
+    nav.className = 'book-page-nav';
+    const prevBtn = document.createElement('button');
+    prevBtn.type='button'; prevBtn.innerHTML='&larr;'; prevBtn.disabled = pageIdx<=0;
+    prevBtn.addEventListener('click', ()=> renderPage(pageIdx-1, true));
+    const label = document.createElement('span');
+    label.textContent = (pageIdx+1)+' / '+pages.length;
+    const nextBtn = document.createElement('button');
+    nextBtn.type='button'; nextBtn.innerHTML='&rarr;'; nextBtn.disabled = pageIdx>=pages.length-1;
+    nextBtn.addEventListener('click', ()=> renderPage(pageIdx+1, true));
+    nav.appendChild(prevBtn); nav.appendChild(label); nav.appendChild(nextBtn);
+    pagesWrap.appendChild(nav);
+  }
+
+  setTimeout(()=>{
+    cover.classList.add('opening');
+    playPageFlipSound();
+    setTimeout(()=>{ pagesWrap.classList.add('show'); renderPage(0, false); }, 650);
+  }, 350);
+}
+
+/* ===================================================================
+   NEW POST — content mode (Write / HTML)
+=================================================================== */
+let contentMode = 'write';
+let savedEditorRange = null;
+
+function getContentHtml(){
+  return contentMode === 'write' ? document.getElementById('writeEditor').innerHTML : document.getElementById('postContent').value;
+}
+function setContentMode(mode){
+  if(mode === contentMode) return;
+  const editor = document.getElementById('writeEditor');
+  const textarea = document.getElementById('postContent');
+  if(mode === 'html'){ textarea.value = editor.innerHTML.trim(); }
+  else { editor.innerHTML = textarea.value.trim(); }
+  contentMode = mode;
+  document.getElementById('modeWriteBtn').classList.toggle('active', mode==='write');
+  document.getElementById('modeHtmlBtn').classList.toggle('active', mode==='html');
+  document.getElementById('writeToolbar').style.display = mode==='write' ? 'flex' : 'none';
+  editor.style.display = mode==='write' ? 'block' : 'none';
+  textarea.style.display = mode==='html' ? 'block' : 'none';
+  document.getElementById('contentModeHint').textContent = mode==='write'
+    ? 'Type normally — bold, headings and lists all work from the toolbar. Prefer raw markup? Switch to HTML.'
+    : 'Full HTML control. Switch back to Write for a plain, no-code editor.';
+  updatePostPreview();
+}
+function formatDoc(cmd, val){
+  const editor = document.getElementById('writeEditor');
+  editor.focus(); restoreEditorSelection();
+  document.execCommand(cmd, false, val || null);
+  handleWriteInput();
+}
+function saveEditorSelection(){
+  const sel = window.getSelection();
+  const editor = document.getElementById('writeEditor');
+  if(sel.rangeCount && editor.contains(sel.anchorNode)) savedEditorRange = sel.getRangeAt(0).cloneRange();
+}
+function restoreEditorSelection(){
+  const editor = document.getElementById('writeEditor');
+  const sel = window.getSelection();
+  if(savedEditorRange){ sel.removeAllRanges(); sel.addRange(savedEditorRange); }
+  else{
+    const range = document.createRange();
+    range.selectNodeContents(editor); range.collapse(false);
+    sel.removeAllRanges(); sel.addRange(range);
+  }
+}
+function handleWriteInput(){ saveEditorSelection(); updatePostPreview(); }
+
+/* ===================================================================
+   NEW POST — photo upload (Step 1: just collect, no placement yet)
+=================================================================== */
+let pendingImages = []; // {id, dataUrl}
+
+function readAndCompressImage(file, maxWidth, quality){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      const img = new Image();
+      img.onload = ()=>{
+        let w = img.width, h = img.height;
+        if(w > maxWidth){ h = Math.round(h * (maxWidth / w)); w = maxWidth; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = ()=> reject(new Error('Could not read that image.'));
+      img.src = e.target.result;
+    };
+    reader.onerror = ()=> reject(new Error('Could not read that file.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+function handlePhotoSelect(e){
+  const files = Array.from(e.target.files || []);
+  const msg = document.getElementById('postFormMsg');
+  const room = 6 - pendingImages.length;
+  if(room <= 0){ msg.textContent = 'You can add up to 6 photos per post — remove one to add another.'; e.target.value=''; return; }
+  const toAdd = files.slice(0, room);
+  if(files.length > toAdd.length){ msg.textContent = '6 photos max per post for now — added the first ' + toAdd.length + '.'; }
+  Promise.all(toAdd.map(f => readAndCompressImage(f, 1000, 0.82)))
+    .then(dataUrls=>{
+      dataUrls.forEach(dataUrl=> pendingImages.push({ id:'img'+Date.now()+Math.random().toString(36).slice(2,7), dataUrl }));
+      renderPhotoThumbs();
+    })
+    .catch(()=>{ msg.textContent = 'One of those photos could not be read — try another file.'; });
+  e.target.value = '';
+}
+function renderPhotoThumbs(){
+  const wrap = document.getElementById('photoThumbs');
+  wrap.innerHTML = '';
+  pendingImages.forEach(img=>{
+    const el = document.createElement('div');
+    el.className = 'photo-thumb';
+    el.innerHTML = `<img src="${img.dataUrl}" alt=""><button type="button" class="remove-x" title="Remove" onclick="removePendingImage(event,'${img.id}')">&times;</button>`;
+    wrap.appendChild(el);
+  });
+}
+function removePendingImage(ev, id){
+  ev.stopPropagation();
+  pendingImages = pendingImages.filter(i=>i.id!==id);
+  renderPhotoThumbs();
+}
+function resetPhotoPanel(){ pendingImages = []; renderPhotoThumbs(); }
+
+/* ===================================================================
+   NEW POST — no-code style panel
+=================================================================== */
+const FONT_STACKS = {
+  serif: "'Fraunces', Georgia, serif",
+  sans: "'Karla', -apple-system, 'Segoe UI', sans-serif",
+  hand: "'Patrick Hand', cursive",
+  mono: "'Courier Prime', 'Courier New', monospace"
+};
+const STYLE_PRESETS = [
+  { name:'Warm Parchment', bg:'#F3ECDD', text:'#2B2230', accent:'#C17B84', font:'serif' },
+  { name:'Midnight Rose',  bg:'#211A24', text:'#EDE6E0', accent:'#C7A15A', font:'serif' },
+  { name:'Sunny Postcard', bg:'#FFF6E5', text:'#4A3728', accent:'#E08E45', font:'hand'  },
+  { name:'Vintage Polaroid', bg:'#EFEAE0', text:'#3B3630', accent:'#9C5C68', font:'mono' },
+  { name:'Clean Minimal',  bg:'#FFFFFF', text:'#1F1B24', accent:'#6E6270', font:'sans'  }
+];
+let currentAlign = 'left';
+let advancedCssMode = false;
+let activePresetIndex = 0;
+
+function renderPresetRow(){
+  const row = document.getElementById('presetRow');
+  row.innerHTML='';
+  STYLE_PRESETS.forEach((p,i)=>{
+    const el = document.createElement('div');
+    el.className = 'preset-swatch' + (i===activePresetIndex ? ' active' : '');
+    el.innerHTML = `<div class="preset-chip" style="background:linear-gradient(120deg, ${p.bg}, ${p.accent});"></div><div class="p-label">${escapeHtml(p.name)}</div>`;
+    el.addEventListener('click', ()=> applyPreset(i));
+    row.appendChild(el);
+  });
+}
+function applyPreset(i){
+  activePresetIndex = i;
+  const p = STYLE_PRESETS[i];
+  document.getElementById('styleBgColor').value = p.bg;
+  document.getElementById('styleTextColor').value = p.text;
+  document.getElementById('styleAccentColor').value = p.accent;
+  document.getElementById('styleFont').value = p.font;
+  renderPresetRow();
+  applyControlsToState();
+}
+function setAlign(align){
+  currentAlign = align;
+  document.querySelectorAll('.align-btn').forEach(b=> b.classList.toggle('active', b.getAttribute('data-align')===align));
+  applyControlsToState();
+}
+function toggleAdvancedCss(){
+  advancedCssMode = !advancedCssMode;
+  document.getElementById('advancedCssWrap').style.display = advancedCssMode ? 'block' : 'none';
+  document.getElementById('advancedToggleBtn').textContent = advancedCssMode ? 'Back to simple controls' : 'Prefer to write CSS yourself? Switch to code mode';
+  if(advancedCssMode){ document.getElementById('postCss').value = buildGeneratedCss(); }
+  updatePostPreview();
+}
+function buildGeneratedCss(){
+  const font = FONT_STACKS[document.getElementById('styleFont').value] || FONT_STACKS.serif;
+  const size = document.getElementById('styleSize').value || '17';
+  const textColor = document.getElementById('styleTextColor').value;
+  const bgColor = document.getElementById('styleBgColor').value;
+  const accent = document.getElementById('styleAccentColor').value;
+  return `body{font-family:${font};font-size:${size}px;line-height:1.7;color:${textColor};background:${bgColor};text-align:${currentAlign};padding:36px;}
+h1,h2,h3{color:${accent};margin-top:0;} a{color:${accent};}
+blockquote{border-left:3px solid ${accent};margin:0;padding-left:16px;font-style:italic;}`;
+}
+function applyControlsToState(){ if(!advancedCssMode) updatePostPreview(); }
+function resetStylePanel(){
+  activePresetIndex = 0; currentAlign = 'left'; advancedCssMode = false;
+  document.getElementById('styleFont').value = STYLE_PRESETS[0].font;
+  document.getElementById('styleSize').value = '17';
+  document.getElementById('styleTextColor').value = STYLE_PRESETS[0].text;
+  document.getElementById('styleBgColor').value = STYLE_PRESETS[0].bg;
+  document.getElementById('styleAccentColor').value = STYLE_PRESETS[0].accent;
+  document.getElementById('advancedCssWrap').style.display='none';
+  document.getElementById('advancedToggleBtn').textContent = 'Prefer to write CSS yourself? Switch to code mode';
+  document.getElementById('postCss').value='';
+  document.querySelectorAll('.align-btn').forEach(b=> b.classList.toggle('active', b.getAttribute('data-align')==='left'));
+  renderPresetRow();
+}
+function updatePostPreview(){
+  const content = getContentHtml();
+  const css = advancedCssMode ? document.getElementById('postCss').value : buildGeneratedCss();
+  document.getElementById('postPreviewFrame').srcdoc = buildPostDoc(content, css);
+}
+
+/* ===================================================================
+   NEW POST — Step 2: arrange photos on a draggable canvas
+=================================================================== */
+let photoPlacements = []; // {id, dataUrl, xPct, yPct, wPct, rot}
+let selectedArrangeId = null;
+let canvasHeightPx = 700;
+let arrangeTemplateApplied = false;
+let editingPostId = null;
+
+const ARRANGE_TEMPLATES = [
+  { id:'scattered', label:'Scattered' },
+  { id:'rail-left', label:'Left rail' },
+  { id:'rail-right', label:'Right rail' },
+  { id:'bottom-row', label:'Bottom row' }
+];
+
+function goToArrangeStep(){
+  const title = document.getElementById('postTitle').value.trim();
+  const msg = document.getElementById('postFormMsg');
+  if(!title){ msg.textContent = 'Give it a title first.'; return; }
+  msg.textContent = '';
+  if(pendingImages.length === 0){ publishPost(); return; }
+  syncPlacementsWithPending();
+  document.getElementById('postStepWrite').style.display = 'none';
+  document.getElementById('postStepArrange').style.display = 'block';
+  document.getElementById('postArrangePublishBtn').textContent = editingPostId ? 'Save changes' : 'Publish memory';
+
+  const content = getContentHtml();
+  const css = advancedCssMode ? document.getElementById('postCss').value : buildGeneratedCss();
+  const frame = document.getElementById('arrangeFrame');
+  frame.onload = ()=>{
+    let h = 700;
+    try{ h = frame.contentDocument.body.scrollHeight; }catch(err){ h = 700; }
+    canvasHeightPx = Math.max(420, h + 240);
+    applyCanvasHeight();
+    if(!arrangeTemplateApplied){ applyTemplate('scattered'); arrangeTemplateApplied = true; }
+    else{ renderArrangeOverlay(); }
+  };
+  frame.srcdoc = buildPostDoc(content, css);
+  renderArrangeTemplates();
+  renderArrangeOverlay();
+}
+function backToWriteStep(){
+  document.getElementById('postStepArrange').style.display = 'none';
+  document.getElementById('postStepWrite').style.display = 'block';
+  updatePostPreview();
+}
+function syncPlacementsWithPending(){
+  photoPlacements = photoPlacements.filter(p => pendingImages.some(pi=>pi.id===p.id));
+  pendingImages.forEach(pi=>{
+    if(!photoPlacements.some(p=>p.id===pi.id)){
+      photoPlacements.push({ id:pi.id, dataUrl:pi.dataUrl, xPct:10, yPct:10, wPct:26, rot:0 });
+      arrangeTemplateApplied = false;
+    }
+  });
+}
+function renderArrangeTemplates(){
+  const wrap = document.getElementById('arrangeTemplates');
+  wrap.innerHTML = '';
+  ARRANGE_TEMPLATES.forEach(t=>{
+    const btn = document.createElement('button');
+    btn.type = 'button'; btn.className = 'template-btn'; btn.textContent = t.label;
+    btn.onclick = ()=> applyTemplate(t.id);
+    wrap.appendChild(btn);
+  });
+}
+function applyTemplate(name){
+  const total = photoPlacements.length;
+  photoPlacements.forEach((p, i)=>{
+    const t = total <= 1 ? 0 : i/(total-1);
+    if(name==='scattered'){
+      p.xPct = 6 + (i%2===0 ? 2 : 48) + (i%3)*5;
+      p.yPct = 4 + t*82;
+      p.wPct = 26;
+      p.rot = (i%2===0 ? -6 : 6) + (i%3)*3;
+    } else if(name==='rail-left'){
+      p.xPct = 4; p.yPct = 3 + t*90; p.wPct = 28; p.rot = (i%2===0 ? -3 : 3);
+    } else if(name==='rail-right'){
+      p.xPct = 68; p.yPct = 3 + t*90; p.wPct = 28; p.rot = (i%2===0 ? -3 : 3);
+    } else if(name==='bottom-row'){
+      const w = Math.max(14, Math.min(26, 92/Math.max(1,total)));
+      p.xPct = 4 + i*(94/Math.max(1,total));
+      p.yPct = 78;
+      p.wPct = w;
+      p.rot = (i%2===0 ? -3 : 3);
+    }
+  });
+  renderArrangeOverlay();
+}
+function growCanvas(delta){
+  canvasHeightPx = Math.max(300, canvasHeightPx + delta);
+  applyCanvasHeight();
+}
+function applyCanvasHeight(){
+  document.getElementById('arrangeCanvas').style.height = canvasHeightPx + 'px';
+  document.getElementById('arrangeFrame').style.height = canvasHeightPx + 'px';
+}
+function renderArrangeOverlay(){
+  const overlay = document.getElementById('arrangeOverlay');
+  overlay.innerHTML = '';
+  photoPlacements.forEach((p, idx)=>{
+    const el = document.createElement('div');
+    el.className = 'arrange-photo' + (p.id===selectedArrangeId ? ' selected' : '');
+    styleArrangeEl(el, p);
+    el.style.zIndex = idx+1;
+    el.addEventListener('pointerdown', (ev)=> startDragPhoto(ev, p.id));
+    overlay.appendChild(el);
+  });
+  document.getElementById('arrangeToolbar').style.display = selectedArrangeId ? 'flex' : 'none';
+}
+function deselectArrangePhoto(ev){
+  if(ev.target.id === 'arrangeCanvas' || ev.target.classList.contains('bg-frame')){
+    selectedArrangeId = null; renderArrangeOverlay();
+  }
+}
+let dragState = null;
+function startDragPhoto(ev, id){
+  ev.preventDefault(); ev.stopPropagation();
+  selectedArrangeId = id;
+  const canvas = document.getElementById('arrangeCanvas');
+  const rect = canvas.getBoundingClientRect();
+  const p = photoPlacements.find(x=>x.id===id);
+  dragState = { id, rect, startX:ev.clientX, startY:ev.clientY, origX:p.xPct, origY:p.yPct };
+  document.addEventListener('pointermove', onDragPhoto);
+  document.addEventListener('pointerup', endDragPhoto);
+  renderArrangeOverlay();
+}
+function onDragPhoto(ev){
+  if(!dragState) return;
+  const dxPct = ((ev.clientX - dragState.startX)/dragState.rect.width)*100;
+  const dyPct = ((ev.clientY - dragState.startY)/dragState.rect.height)*100;
+  const p = photoPlacements.find(x=>x.id===dragState.id);
+  if(!p) return;
+  p.xPct = Math.max(0, Math.min(94, dragState.origX + dxPct));
+  p.yPct = Math.max(0, Math.min(96, dragState.origY + dyPct));
+  renderArrangeOverlay();
+}
+function endDragPhoto(){
+  dragState = null;
+  document.removeEventListener('pointermove', onDragPhoto);
+  document.removeEventListener('pointerup', endDragPhoto);
+}
+function getSelectedPlacement(){ return photoPlacements.find(p=>p.id===selectedArrangeId); }
+function rotateSelected(delta){ const p=getSelectedPlacement(); if(p){ p.rot=p.rot+delta; renderArrangeOverlay(); } }
+function resizeSelected(delta){ const p=getSelectedPlacement(); if(p){ p.wPct=Math.max(10,Math.min(70,p.wPct+delta)); renderArrangeOverlay(); } }
+function bringSelectedToFront(){
+  const idx = photoPlacements.findIndex(p=>p.id===selectedArrangeId);
+  if(idx>-1){ const [p]=photoPlacements.splice(idx,1); photoPlacements.push(p); renderArrangeOverlay(); }
+}
+function sendSelectedToBack(){
+  const idx = photoPlacements.findIndex(p=>p.id===selectedArrangeId);
+  if(idx>-1){ const [p]=photoPlacements.splice(idx,1); photoPlacements.unshift(p); renderArrangeOverlay(); }
+}
+function deleteSelectedPlacement(){
+  photoPlacements = photoPlacements.filter(p=>p.id!==selectedArrangeId);
+  pendingImages = pendingImages.filter(pi=>pi.id!==selectedArrangeId);
+  selectedArrangeId = null;
+  renderArrangeOverlay();
+  renderPhotoThumbs();
+}
+
+function publishPost(){
+  const title = document.getElementById('postTitle').value.trim();
+  const date = document.getElementById('postDate').value;
+  const content = getContentHtml();
+  const css = advancedCssMode ? document.getElementById('postCss').value : buildGeneratedCss();
+  const writeMsg = document.getElementById('postFormMsg');
+  const arrangeMsg = document.getElementById('arrangeFormMsg');
+  if(!title){ writeMsg.textContent = 'Give it a title first.'; backToWriteStep(); return; }
+
+  const photoCanvas = photoPlacements.length ? {
+    heightPx: canvasHeightPx,
+    photos: photoPlacements.map(p=>({ dataUrl:p.dataUrl, xPct:p.xPct, yPct:p.yPct, wPct:p.wPct, hPct:p.hPct||null, rot:p.rot }))
+  } : null;
+
+  const posts = loadJSON(K_POSTS, []);
+
+  if(editingPostId){
+    const idx = posts.findIndex(p=>p.id===editingPostId);
+    if(idx===-1){ writeMsg.textContent = "Couldn't find that memory to update."; editingPostId = null; return; }
+    const existing = posts[idx];
+    existing.title = title; existing.date = date; existing.content = content; existing.css = css;
+    if(photoCanvas) existing.photoCanvas = photoCanvas; else delete existing.photoCanvas;
+    const ok = saveJSON(K_POSTS, posts);
+    if(!ok){
+      const msgEl = photoPlacements.length ? arrangeMsg : writeMsg;
+      msgEl.textContent = "That's too much for this browser to store — try removing a photo or two.";
+      return;
+    }
+    addLog(getSession(), 'Edited "'+title+'"');
+  } else {
+    const post = { id:'p'+Date.now(), type:'post', title, date, content, css, author:getSession(), createdAt:Date.now() };
+    if(photoCanvas) post.photoCanvas = photoCanvas;
+    posts.push(post);
+    const ok = saveJSON(K_POSTS, posts);
+    if(!ok){
+      const msgEl = photoPlacements.length ? arrangeMsg : writeMsg;
+      msgEl.textContent = "That's too much for this browser to store — try removing a photo or two and publishing again.";
+      return;
+    }
+    addLog(getSession(), 'Published "'+title+'"');
+  }
+
+  editingPostId = null;
+  document.getElementById('cancelEditBtn').style.display = 'none';
+  document.getElementById('postArrangePublishBtn').textContent = 'Publish memory';
+  document.getElementById('postTitle').value = '';
+  document.getElementById('postDate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('writeEditor').innerHTML = '';
+  document.getElementById('postContent').value = '<p>Write your memory here...</p>';
+  if(contentMode !== 'write') setContentMode('write');
+  resetStylePanel();
+  resetPhotoPanel();
+  photoPlacements = [];
+  selectedArrangeId = null;
+  arrangeTemplateApplied = false;
+  canvasHeightPx = 700;
+  updatePostPreview();
+  backToWriteStep();
+  switchView('memories');
+}
+function editCurrentPost(){
+  if(!currentModalItem || currentModalItem.type !== 'post') return;
+  const item = currentModalItem;
+  editingPostId = item.id;
+  closeModal();
+  switchView('newpost');
+
+  document.getElementById('postTitle').value = item.title;
+  document.getElementById('postDate').value = item.date || new Date().toISOString().slice(0,10);
+
+  if(contentMode !== 'write') setContentMode('write');
+  document.getElementById('writeEditor').innerHTML = item.content || '';
+  document.getElementById('postContent').value = item.content || '';
+  if(!advancedCssMode) toggleAdvancedCss();
+  document.getElementById('postCss').value = item.css || '';
+
+  if(item.photoCanvas && item.photoCanvas.photos && item.photoCanvas.photos.length){
+    pendingImages = item.photoCanvas.photos.map((p,i)=>({ id:'edit'+i+'_'+Date.now(), dataUrl:p.dataUrl }));
+    photoPlacements = item.photoCanvas.photos.map((p,i)=>({ id:pendingImages[i].id, dataUrl:p.dataUrl, xPct:p.xPct, yPct:p.yPct, wPct:p.wPct, hPct:p.hPct||null, rot:p.rot }));
+    canvasHeightPx = item.photoCanvas.heightPx || 700;
+    arrangeTemplateApplied = true;
+  } else {
+    pendingImages = [];
+    photoPlacements = [];
+  }
+  renderPhotoThumbs();
+
+  document.getElementById('cancelEditBtn').style.display = 'inline-block';
+  document.getElementById('postFormMsg').textContent = 'Editing "'+item.title+'" — make your changes, then publish to save.';
+  updatePostPreview();
+}
+function cancelEditPost(){
+  editingPostId = null;
+  document.getElementById('cancelEditBtn').style.display = 'none';
+  document.getElementById('postArrangePublishBtn').textContent = 'Publish memory';
+  document.getElementById('postTitle').value = '';
+  document.getElementById('postDate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('writeEditor').innerHTML = '';
+  document.getElementById('postContent').value = '<p>Write your memory here...</p>';
+  if(contentMode !== 'write') setContentMode('write');
+  resetStylePanel();
+  resetPhotoPanel();
+  photoPlacements = [];
+  selectedArrangeId = null;
+  arrangeTemplateApplied = false;
+  canvasHeightPx = 700;
+  updatePostPreview();
+  backToWriteStep();
+  document.getElementById('postFormMsg').textContent = '';
+}
+
+/* ===================================================================
+   ACTIVITY LOG
+=================================================================== */
+function renderActivity(){
+  const logs = loadJSON(K_LOGS, []);
+  const body = document.getElementById('logTableBody');
+  body.innerHTML='';
+  if(logs.length===0){ body.innerHTML = '<tr><td colspan="3" style="color:var(--text-muted-on-paper);padding:20px 0;">No activity recorded yet.</td></tr>'; return; }
+  logs.forEach(log=>{
+    const tr = document.createElement('tr');
+    const d = new Date(log.time);
+    tr.innerHTML = `<td class="log-user">${getAvatarHtml(log.username,18)} ${escapeHtml(getDisplayName(log.username))}</td><td><span class="log-tag">${escapeHtml(log.action)}</span></td><td>${d.toLocaleDateString()} at ${d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</td>`;
+    body.appendChild(tr);
+  });
+}
+
+/* ===================================================================
+   PHOTO ALBUM — cover themes (simple original SVG motifs)
+=================================================================== */
+const COVER_THEMES = [
+  { id:'swans', label:'Swans in love',
+    gradient:'linear-gradient(160deg,#2F5D62,#33243A)',
+    svg:`<svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg"><path d="M100,120 C100,120 30,75 30,45 C30,25 55,12 75,28 C85,36 95,45 100,58 C105,45 115,36 125,28 C145,12 170,25 170,45 C170,75 100,120 100,120 Z" fill="#FBF6EC" opacity="0.92"/><path d="M62,48 C50,30 35,25 25,32" stroke="#FBF6EC" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="25" cy="32" r="4" fill="#FBF6EC"/><path d="M138,48 C150,30 165,25 175,32" stroke="#FBF6EC" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="175" cy="32" r="4" fill="#FBF6EC"/></svg>` },
+  { id:'otters', label:'Otters holding paws',
+    gradient:'linear-gradient(160deg,#3C6E8F,#89C4D1)',
+    svg:`<svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg"><path d="M0,112 Q50,98 100,112 T200,112" stroke="#FBF6EC" stroke-width="3" fill="none" opacity="0.5"/><g fill="#FBF6EC"><ellipse cx="70" cy="88" rx="27" ry="19"/><circle cx="52" cy="63" r="15"/><circle cx="42" cy="52" r="5"/><circle cx="60" cy="50" r="5"/><ellipse cx="130" cy="88" rx="27" ry="19"/><circle cx="148" cy="63" r="15"/><circle cx="140" cy="50" r="5"/><circle cx="158" cy="52" r="5"/><rect x="88" y="80" width="24" height="5" rx="2.5"/></g></svg>` },
+  { id:'doves', label:'Moonlit doves',
+    gradient:'linear-gradient(160deg,#1B1730,#3A2A4D)',
+    svg:`<svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg"><path d="M100,18 A20,20 0 1,0 100,58 A15,15 0 1,1 100,18 Z" fill="#F3E7C9"/><circle cx="45" cy="95" r="1.6" fill="#F3E7C9"/><circle cx="160" cy="30" r="1.6" fill="#F3E7C9"/><circle cx="30" cy="55" r="1.2" fill="#F3E7C9"/><path d="M50,92 Q60,80 70,92 Q80,80 90,92" stroke="#FBF6EC" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M110,92 Q120,80 130,92 Q140,80 150,92" stroke="#FBF6EC" stroke-width="4" fill="none" stroke-linecap="round"/></svg>` },
+  { id:'sunset', label:'Sunset embrace',
+    gradient:'linear-gradient(160deg,#E08E45,#C1657A)',
+    svg:`<svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg"><circle cx="100" cy="78" r="42" fill="#FBF6EC" opacity="0.9"/><rect x="0" y="108" width="200" height="32" fill="#00000022"/><path d="M85,60 C85,50 100,50 100,62 C100,50 115,50 115,60 C115,72 100,82 100,90 C100,82 85,72 85,60 Z" fill="#C1657A" opacity="0.85"/></svg>` }
+];
+let albumSelectedCover = 'swans';
+
+function renderCoverThemeRow(){
+  const row = document.getElementById('coverThemeRow');
+  row.innerHTML = '';
+  COVER_THEMES.forEach(theme=>{
+    const el = document.createElement('div');
+    el.className = 'preset-swatch' + (theme.id===albumSelectedCover ? ' active' : '');
+    el.innerHTML = `<div class="cover-swatch-frame" style="background:${theme.gradient};">${theme.svg}</div><div class="p-label">${escapeHtml(theme.label)}</div>`;
+    el.addEventListener('click', ()=>{ albumSelectedCover = theme.id; renderCoverThemeRow(); });
+    row.appendChild(el);
+  });
+}
+
+const PAGE_BACKGROUNDS = [
+  { id:'cream', label:'Cream paper', css:'#FBF6EC' },
+  { id:'blush', label:'Blush', css:'linear-gradient(160deg,#F7E6E6,#F1D4DA)' },
+  { id:'sage', label:'Sage', css:'linear-gradient(160deg,#E9EFE3,#D8E3D0)' },
+  { id:'kraft', label:'Kraft', css:'linear-gradient(160deg,#EADFC5,#DFD0AC)' },
+  { id:'midnight', label:'Midnight', css:'linear-gradient(160deg,#241D30,#33263F)' }
+];
+let albumSelectedPageBg = 'cream';
+
+function renderPageBgRow(){
+  const row = document.getElementById('pageBgRow');
+  row.innerHTML = '';
+  PAGE_BACKGROUNDS.forEach(bg=>{
+    const el = document.createElement('div');
+    el.className = 'preset-swatch' + (bg.id===albumSelectedPageBg ? ' active' : '');
+    el.innerHTML = `<div class="preset-chip" style="background:${bg.css};height:36px;"></div><div class="p-label">${escapeHtml(bg.label)}</div>`;
+    el.addEventListener('click', ()=>{ albumSelectedPageBg = bg.id; renderPageBgRow(); });
+    row.appendChild(el);
+  });
+}
+
+/* ---------------- Step 1: details + photo upload ---------------- */
+let albumPendingImages = [];
+
+function readMediaFile(file){
+  if(file.type.startsWith('video/')){
+    const maxBytes = 6 * 1024 * 1024;
+    if(file.size > maxBytes){
+      return Promise.reject(new Error('That video is too large — keep clips under 6MB.'));
+    }
+    return new Promise((resolve, reject)=>{
+      const reader = new FileReader();
+      reader.onload = e=> resolve({ dataUrl: e.target.result, type:'video' });
+      reader.onerror = ()=> reject(new Error('Could not read that video.'));
+      reader.readAsDataURL(file);
+    });
+  }
+  return readAndCompressImage(file, 900, 0.8).then(dataUrl=> ({ dataUrl, type:'image' }));
+}
+function readAlbumFiles(files){
+  const room = 12 - albumPendingImages.length;
+  const msg = document.getElementById('albumFormMsg');
+  if(room <= 0){ msg.textContent = 'Up to 12 items per album — remove one to add another.'; return; }
+  const toAdd = files.slice(0, room);
+  if(files.length > toAdd.length){ msg.textContent = '12 items max — added the first ' + toAdd.length + '.'; }
+  Promise.all(toAdd.map(f => readMediaFile(f).catch(err=> ({ error: err.message }))))
+    .then(results=>{
+      let errorMsg = '';
+      results.forEach(r=>{
+        if(r.error){ errorMsg = r.error; return; }
+        albumPendingImages.push({ id:'aimg'+Date.now()+Math.random().toString(36).slice(2,7), dataUrl:r.dataUrl, type:r.type });
+      });
+      if(errorMsg) msg.textContent = errorMsg;
+      renderAlbumThumbs();
+    });
+}
+function handleAlbumPhotoSelect(e){
+  readAlbumFiles(Array.from(e.target.files || []));
+  e.target.value = '';
+}
+function renderAlbumThumbs(){
+  const wrap = document.getElementById('albumPhotoThumbs');
+  wrap.innerHTML = '';
+  albumPendingImages.forEach(img=>{
+    const el = document.createElement('div');
+    el.className = 'photo-thumb';
+    const mediaHtml = img.type === 'video'
+      ? `<video src="${img.dataUrl}" muted></video><div class="thumb-play">&#9658;</div>`
+      : `<img src="${img.dataUrl}" alt="">`;
+    el.innerHTML = `${mediaHtml}<button type="button" class="remove-x" title="Remove" onclick="removeAlbumImage(event,'${img.id}')">&times;</button>`;
+    wrap.appendChild(el);
+  });
+}
+function removeAlbumImage(ev, id){
+  ev.stopPropagation();
+  albumPendingImages = albumPendingImages.filter(i=>i.id!==id);
+  renderAlbumThumbs();
+}
+
+/* ---------------- Step 2: arrange photos onto pages ---------------- */
+let albumPages = []; // [{photos:[{id,dataUrl,type,xPct,yPct,wPct,rot}], heightPx}]
+let currentAlbumPageIndex = 0;
+let selectedAlbumPhotoId = null;
+let albumDragState = null;
+const ALBUM_PAGE_HEIGHT = 440;
+const PHOTOS_PER_PAGE = 4;
+
+function goToAlbumArrangeStep(){
+  const title = document.getElementById('albumTitle').value.trim();
+  const msg = document.getElementById('albumFormMsg');
+  if(!title){ msg.textContent = 'Give it a title first.'; return; }
+  if(albumPendingImages.length===0){ msg.textContent = 'Add at least one photo or video.'; return; }
+  msg.textContent = '';
+
+  albumPages = [];
+  for(let i=0; i<albumPendingImages.length; i+=PHOTOS_PER_PAGE){
+    const chunk = albumPendingImages.slice(i, i+PHOTOS_PER_PAGE);
+    albumPages.push({
+      heightPx: ALBUM_PAGE_HEIGHT,
+      photos: chunk.map(img=>({ id:img.id, dataUrl:img.dataUrl, type:img.type||'image', xPct:10, yPct:10, wPct:30, rot:0 }))
+    });
+  }
+  albumPages.forEach((_, idx)=>{ currentAlbumPageIndex = idx; applyPageTemplate('scattered'); });
+  currentAlbumPageIndex = 0;
+
+  document.getElementById('albumStepDetails').style.display = 'none';
+  document.getElementById('albumStepArrange').style.display = 'block';
+  renderAlbumPageTabs();
+  renderAlbumArrangeOverlay();
+}
+function backToAlbumDetails(){
+  document.getElementById('albumStepArrange').style.display = 'none';
+  document.getElementById('albumStepDetails').style.display = 'block';
+}
+function renderAlbumPageTabs(){
+  const wrap = document.getElementById('albumPageTabs');
+  wrap.innerHTML = '';
+  albumPages.forEach((pg, i)=>{
+    const btn = document.createElement('button');
+    btn.type='button';
+    btn.className = 'template-btn';
+    if(i===currentAlbumPageIndex){ btn.style.background='var(--rose-deep)'; btn.style.color='#fff'; btn.style.borderColor='var(--rose-deep)'; }
+    btn.textContent = 'Page '+(i+1);
+    btn.onclick = ()=>{ currentAlbumPageIndex = i; selectedAlbumPhotoId=null; renderAlbumPageTabs(); renderAlbumArrangeOverlay(); };
+    wrap.appendChild(btn);
+  });
+  const addBtn = document.createElement('button');
+  addBtn.type='button'; addBtn.className='template-btn'; addBtn.textContent='+ Add page';
+  addBtn.onclick = ()=>{
+    albumPages.push({ heightPx: ALBUM_PAGE_HEIGHT, photos: [] });
+    currentAlbumPageIndex = albumPages.length-1;
+    renderAlbumPageTabs(); renderAlbumArrangeOverlay();
+  };
+  wrap.appendChild(addBtn);
+}
+function currentAlbumPage(){ return albumPages[currentAlbumPageIndex]; }
+
+function heartAnchors(n){
+  const raw = [];
+  const count = Math.max(n, 1);
+  for(let k=0; k<count; k++){
+    const t = (k/count) * Math.PI * 2;
+    const x = 16 * Math.pow(Math.sin(t), 3);
+    const y = 13*Math.cos(t) - 5*Math.cos(2*t) - 2*Math.cos(3*t) - Math.cos(4*t);
+    raw.push({x, y});
+  }
+  const xs = raw.map(p=>p.x), ys = raw.map(p=>p.y);
+  const minX = Math.min(...xs), maxX = Math.max(...xs);
+  const minY = Math.min(...ys), maxY = Math.max(...ys);
+  return raw.map(p=>({
+    xPct: 10 + ((p.x - minX)/(maxX - minX || 1)) * 66,
+    yPct: 6 + ((maxY - p.y)/(maxY - minY || 1)) * 72
+  }));
+}
+function applyPageTemplate(name){
+  const page = currentAlbumPage ? albumPages[currentAlbumPageIndex] : null;
+  if(!page) return;
+  const arr = page.photos;
+  const total = arr.length;
+  const rows = Math.ceil(total/2) || 1;
+  const anchors = name==='heart' ? heartAnchors(total) : null;
+  arr.forEach((p,i)=>{
+    const t = total<=1 ? 0 : i/(total-1);
+    if(name==='scattered'){
+      p.xPct = 6 + (i%2===0?2:48) + (i%3)*5; p.yPct = 4 + t*76; p.wPct = 32; p.rot = (i%2===0?-7:7)+(i%3)*3; p.hPct = null;
+    } else if(name==='grid'){
+      const cols = 2; const col = i%cols; const row = Math.floor(i/cols);
+      const cellW = 92/cols; const cellH = 92/rows;
+      p.xPct = 4 + col*(cellW+2); p.yPct = 4 + row*(cellH+2); p.wPct = cellW; p.hPct = cellH; p.rot = 0;
+    } else if(name==='stack'){
+      p.xPct = 22 + (i%3)*3; p.yPct = 5 + i*(78/Math.max(1,total)); p.wPct = 46; p.rot = (i%2===0?-4:4); p.hPct = null;
+    } else if(name==='heart'){
+      const a = anchors[i];
+      p.xPct = a.xPct; p.yPct = a.yPct; p.wPct = 22; p.hPct = 22; p.rot = 0;
+    } else if(name==='circle'){
+      const ang = total<=0 ? 0 : (i/total) * Math.PI * 2;
+      p.xPct = 50 + Math.cos(ang)*34 - 10;
+      p.yPct = 46 + Math.sin(ang)*34 - 10;
+      p.wPct = 20; p.hPct = 20; p.rot = 0;
+    }
+  });
+  renderAlbumArrangeOverlay();
+}
+function renderAlbumArrangeOverlay(){
+  const page = currentAlbumPage();
+  if(!page) return;
+  const canvas = document.getElementById('albumCanvas');
+  canvas.style.height = page.heightPx+'px';
+  const bgTheme = PAGE_BACKGROUNDS.find(b=>b.id===albumSelectedPageBg) || PAGE_BACKGROUNDS[0];
+  canvas.style.background = bgTheme.css;
+  const overlay = document.getElementById('albumOverlay');
+  overlay.innerHTML = '';
+  page.photos.forEach((p, idx)=>{
+    const el = document.createElement('div');
+    el.className = 'arrange-photo' + (p.id===selectedAlbumPhotoId ? ' selected' : '');
+    styleArrangeEl(el, p);
+    el.style.zIndex = idx+1;
+    el.addEventListener('pointerdown', (ev)=> startAlbumDrag(ev, p.id));
+    overlay.appendChild(el);
+  });
+  document.getElementById('albumArrangeToolbar').style.display = selectedAlbumPhotoId ? 'flex' : 'none';
+}
+function deselectAlbumPhoto(ev){
+  if(ev.target.id === 'albumCanvas'){ selectedAlbumPhotoId = null; renderAlbumArrangeOverlay(); }
+}
+function startAlbumDrag(ev, id){
+  ev.preventDefault(); ev.stopPropagation();
+  selectedAlbumPhotoId = id;
+  const canvas = document.getElementById('albumCanvas');
+  const rect = canvas.getBoundingClientRect();
+  const p = currentAlbumPage().photos.find(x=>x.id===id);
+  albumDragState = { id, rect, startX:ev.clientX, startY:ev.clientY, origX:p.xPct, origY:p.yPct };
+  document.addEventListener('pointermove', onAlbumDrag);
+  document.addEventListener('pointerup', endAlbumDrag);
+  renderAlbumArrangeOverlay();
+}
+function onAlbumDrag(ev){
+  if(!albumDragState) return;
+  const dxPct = ((ev.clientX - albumDragState.startX)/albumDragState.rect.width)*100;
+  const dyPct = ((ev.clientY - albumDragState.startY)/albumDragState.rect.height)*100;
+  const p = currentAlbumPage().photos.find(x=>x.id===albumDragState.id);
+  if(!p) return;
+  p.xPct = Math.max(0, Math.min(94, albumDragState.origX + dxPct));
+  p.yPct = Math.max(0, Math.min(96, albumDragState.origY + dyPct));
+  renderAlbumArrangeOverlay();
+}
+function endAlbumDrag(){
+  albumDragState = null;
+  document.removeEventListener('pointermove', onAlbumDrag);
+  document.removeEventListener('pointerup', endAlbumDrag);
+}
+function getSelectedAlbumPhoto(){ return currentAlbumPage().photos.find(p=>p.id===selectedAlbumPhotoId); }
+function rotateSelectedAlbumPhoto(d){ const p=getSelectedAlbumPhoto(); if(p){ p.rot+=d; renderAlbumArrangeOverlay(); } }
+function resizeSelectedAlbumPhoto(d){ const p=getSelectedAlbumPhoto(); if(p){ p.wPct=Math.max(10,Math.min(70,p.wPct+d)); renderAlbumArrangeOverlay(); } }
+function bringSelectedAlbumPhotoFront(){
+  const arr = currentAlbumPage().photos;
+  const idx = arr.findIndex(p=>p.id===selectedAlbumPhotoId);
+  if(idx>-1){ const [p]=arr.splice(idx,1); arr.push(p); renderAlbumArrangeOverlay(); }
+}
+function sendSelectedAlbumPhotoBack(){
+  const arr = currentAlbumPage().photos;
+  const idx = arr.findIndex(p=>p.id===selectedAlbumPhotoId);
+  if(idx>-1){ const [p]=arr.splice(idx,1); arr.unshift(p); renderAlbumArrangeOverlay(); }
+}
+function moveSelectedAlbumPhoto(dir){
+  const targetIdx = currentAlbumPageIndex + dir;
+  if(targetIdx<0 || targetIdx>=albumPages.length) return;
+  const arr = currentAlbumPage().photos;
+  const idx = arr.findIndex(p=>p.id===selectedAlbumPhotoId);
+  if(idx<0) return;
+  const [p] = arr.splice(idx,1);
+  p.xPct = 10; p.yPct = 10;
+  albumPages[targetIdx].photos.push(p);
+  selectedAlbumPhotoId = null;
+  currentAlbumPageIndex = targetIdx;
+  renderAlbumPageTabs();
+  renderAlbumArrangeOverlay();
+}
+function deleteSelectedAlbumPhoto(){
+  const arr = currentAlbumPage().photos;
+  currentAlbumPage().photos = arr.filter(p=>p.id!==selectedAlbumPhotoId);
+  selectedAlbumPhotoId = null;
+  renderAlbumArrangeOverlay();
+}
+
+function publishAlbum(){
+  const title = document.getElementById('albumTitle').value.trim();
+  const date = document.getElementById('albumDate').value;
+  const msg = document.getElementById('albumArrangeMsg');
+  if(!title){ msg.textContent = 'Give it a title first.'; backToAlbumDetails(); return; }
+  const nonEmptyPages = albumPages.filter(pg=>pg.photos.length>0);
+  if(nonEmptyPages.length===0){ msg.textContent = 'Add at least one photo to a page.'; return; }
+
+  const albums = loadJSON(K_ALBUMS, []);
+  albums.push({
+    id: 'a'+Date.now(), type:'album', title, date,
+    cover: { theme: albumSelectedCover },
+    pageBackground: albumSelectedPageBg,
+    pages: nonEmptyPages.map(pg=>({
+      heightPx: pg.heightPx,
+      photos: pg.photos.map(p=>({ dataUrl:p.dataUrl, type:p.type||'image', xPct:p.xPct, yPct:p.yPct, wPct:p.wPct, hPct:p.hPct||null, rot:p.rot }))
+    })),
+    author: getSession(), createdAt: Date.now()
+  });
+  const ok = saveJSON(K_ALBUMS, albums);
+  if(!ok){ msg.textContent = "That's too much for this browser to store — try removing a photo or two."; return; }
+  addLog(getSession(), 'Published photo memory "'+title+'"');
+
+  document.getElementById('albumTitle').value = '';
+  document.getElementById('albumDate').value = new Date().toISOString().slice(0,10);
+  albumPendingImages = [];
+  albumSelectedCover = 'swans';
+  albumSelectedPageBg = 'cream';
+  albumPages = [];
+  currentAlbumPageIndex = 0;
+  selectedAlbumPhotoId = null;
+  renderAlbumThumbs();
+  renderCoverThemeRow();
+  renderPageBgRow();
+  backToAlbumDetails();
+  switchView('memories');
+}
+
+/* ===================================================================
+   SPOTIFY MOOD PANEL
+=================================================================== */
+const K_SPOTIFY = 'us_journal_spotify_url';
+
+function toSpotifyEmbedUrl(url){
+  try{
+    const u = new URL(url);
+    if(!u.hostname.includes('spotify.com')) return null;
+    const parts = u.pathname.split('/').filter(Boolean);
+    if(parts.length < 2) return null;
+    const id = parts[parts.length-1];
+    const type = parts[parts.length-2];
+    if(!['track','album','playlist','episode','show'].includes(type)) return null;
+    return `https://open.spotify.com/embed/${type}/${id}`;
+  }catch(e){ return null; }
+}
+function loadSpotifySetting(){
+  const url = localStorage.getItem(K_SPOTIFY) || '';
+  const input = document.getElementById('spotifyInput');
+  if(input) input.value = url;
+  renderSpotifyEmbed(url);
+}
+function saveSpotifyLink(){
+  const url = document.getElementById('spotifyInput').value.trim();
+  localStorage.setItem(K_SPOTIFY, url);
+  renderSpotifyEmbed(url);
+}
+function renderSpotifyEmbed(url){
+  const wrap = document.getElementById('spotifyEmbedWrap');
+  const openLink = document.getElementById('spotifyOpenLink');
+  if(!wrap || !openLink) return;
+  wrap.innerHTML = '';
+  if(!url){ openLink.style.display = 'none'; return; }
+  openLink.href = url;
+  openLink.style.display = 'inline';
+  const embed = toSpotifyEmbedUrl(url);
+  if(embed){
+    const iframe = document.createElement('iframe');
+    iframe.src = embed;
+    iframe.width = '100%';
+    iframe.height = '80';
+    iframe.style.border = 'none';
+    iframe.allow = 'encrypted-media';
+    iframe.loading = 'lazy';
+    wrap.appendChild(iframe);
+  }
+}
+
+/* ===================================================================
+   EXPORT ALL DATA
+=================================================================== */
+async function exportAllData(){
+  const status = document.getElementById('exportStatus');
+  if(status) status.textContent = 'Preparing...';
+  const downloads = (window.claude && typeof window.claude.use === 'function') ? await window.claude.use('downloads') : null;
+  if(!downloads){
+    if(status) status.textContent = "Downloads aren't available here.";
+    return;
+  }
+  const data = {
+    exportedAt: new Date().toISOString(),
+    users: loadJSON(K_USERS, []).map(u=>({ username:u.username, email:u.email, createdAt:u.createdAt })),
+    posts: loadJSON(K_POSTS, []),
+    albums: loadJSON(K_ALBUMS, []),
+    logs: loadJSON(K_LOGS, [])
+  };
+  const json = JSON.stringify(data, null, 2);
+  try{
+    await downloads.save({ filename: 'us-journal-export.json', data: json });
+    if(status) status.textContent = 'Saved!';
+    setTimeout(()=>{ if(status) status.textContent = ''; }, 3000);
+  }catch(err){
+    if(status) status.textContent = (err && err.code==='declined') ? '' : 'Could not save the file.';
+  }
+}
+
+/* ===================================================================
+   TIMELINE
+=================================================================== */
+function renderTimeline(){
+  const posts = loadJSON(K_POSTS, []);
+  const albums = loadJSON(K_ALBUMS, []);
+  const items = posts.concat(albums);
+  const groups = {};
+  items.forEach(item=>{
+    if(!item.date) return;
+    const d = new Date(item.date+'T00:00:00');
+    if(isNaN(d)) return;
+    const key = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    if(!groups[key]) groups[key] = { label: d.toLocaleDateString(undefined,{month:'long',year:'numeric'}), items: [], sortKey: d.getFullYear()*12+d.getMonth() };
+    groups[key].items.push(item);
+  });
+  const keys = Object.keys(groups).sort((a,b)=> groups[b].sortKey - groups[a].sortKey);
+  const wrap = document.getElementById('timelineList');
+  wrap.innerHTML = '';
+  if(keys.length===0){ wrap.innerHTML = '<div class="milestone-empty">Nothing on the timeline yet — publish a memory to get started.</div>'; return; }
+  keys.forEach(key=>{
+    const g = groups[key];
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'timeline-month-btn';
+    btn.innerHTML = `<span class="timeline-month-name">${g.label}</span><span class="timeline-month-count">${g.items.length} ${g.items.length===1?'memory':'memories'}</span>`;
+    btn.onclick = ()=>{
+      timelineMonthFilter = key;
+      switchView('memories');
+    };
+    wrap.appendChild(btn);
+  });
+}
+
+/* ===================================================================
+   MILESTONES
+=================================================================== */
+const K_MILESTONES = 'us_journal_milestones';
+function daysBetween(dateStr){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const target = new Date(dateStr+'T00:00:00');
+  return Math.round((target - today) / 86400000);
+}
+function ordinal(n){
+  const s = ["th","st","nd","rd"];
+  const v = n % 100;
+  return n + (s[(v-20)%10] || s[v] || s[0]);
+}
+function nextOccurrence(dateStr){
+  const original = new Date(dateStr+'T00:00:00');
+  const today = new Date(); today.setHours(0,0,0,0);
+  let next = new Date(today.getFullYear(), original.getMonth(), original.getDate());
+  if(next < today) next.setFullYear(next.getFullYear()+1);
+  return next;
+}
+function addMilestone(){
+  const label = document.getElementById('milestoneLabel').value.trim();
+  const date = document.getElementById('milestoneDate').value;
+  const recurring = document.getElementById('milestoneRecurring').checked;
+  const msg = document.getElementById('milestoneMsg');
+  if(!label || !date){ msg.textContent = 'Give it a name and a date.'; return; }
+  const list = loadJSON(K_MILESTONES, []);
+  list.push({ id:'m'+Date.now(), label, date, recurring });
+  saveJSON(K_MILESTONES, list);
+  document.getElementById('milestoneLabel').value = '';
+  document.getElementById('milestoneDate').value = '';
+  document.getElementById('milestoneRecurring').checked = false;
+  msg.textContent = '';
+  renderMilestones();
+}
+function removeMilestone(id){
+  saveJSON(K_MILESTONES, loadJSON(K_MILESTONES, []).filter(m=>m.id!==id));
+  renderMilestones();
+}
+function triggerConfetti(){
+  const colors = ['#C17B84','#C7A15A','#9C5C68','#F3ECDD','#7FB69E'];
+  const container = document.createElement('div');
+  container.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:200;overflow:hidden;';
+  document.body.appendChild(container);
+  for(let i=0; i<60; i++){
+    const p = document.createElement('div');
+    const color = colors[Math.floor(Math.random()*colors.length)];
+    const size = 6 + Math.random()*6;
+    const left = Math.random()*100;
+    const duration = 2.2 + Math.random()*1.4;
+    const delay = Math.random()*0.4;
+    const rotate = Math.random()*360;
+    p.style.cssText = `position:absolute;top:-20px;left:${left}%;width:${size}px;height:${size*0.5}px;background:${color};opacity:.9;transform:rotate(${rotate}deg);border-radius:2px;animation:confetti-fall ${duration}s ease-in ${delay}s forwards;`;
+    container.appendChild(p);
+  }
+  setTimeout(()=>{ container.remove(); }, 4000);
+}
+function renderMilestones(){
+  const list = loadJSON(K_MILESTONES, []).slice();
+  list.forEach(m=>{
+    m._sortDiff = m.recurring ? daysBetween(nextOccurrence(m.date).toISOString().slice(0,10)) : daysBetween(m.date);
+  });
+  list.sort((a,b)=>{
+    const aPast = !a.recurring && a._sortDiff < 0;
+    const bPast = !b.recurring && b._sortDiff < 0;
+    if(aPast !== bPast) return aPast ? 1 : -1;
+    return a._sortDiff - b._sortDiff;
+  });
+  const wrap = document.getElementById('milestoneList');
+  wrap.innerHTML = '';
+  if(list.length===0){ wrap.innerHTML = '<div class="milestone-empty">No milestones yet — add your first date above.</div>'; return; }
+  const todayKey = new Date().toISOString().slice(0,10);
+  list.forEach(m=>{
+    let countText;
+    let isToday = false;
+    if(m.recurring){
+      const next = nextOccurrence(m.date);
+      const diff = daysBetween(next.toISOString().slice(0,10));
+      const original = new Date(m.date+'T00:00:00');
+      const anniversaryNum = next.getFullYear() - original.getFullYear();
+      const label = anniversaryNum > 0 ? `your ${ordinal(anniversaryNum)}` : 'this';
+      isToday = diff===0;
+      countText = isToday ? `Today is ${label}! 🎉` : `${diff} day${diff===1?'':'s'} until ${label}`;
+    } else {
+      const diff = daysBetween(m.date);
+      isToday = diff===0;
+      if(isToday) countText = 'Today! 🎉';
+      else if(diff>0) countText = diff + ' day' + (diff===1?'':'s') + ' to go';
+      else countText = Math.abs(diff) + ' day' + (Math.abs(diff)===1?'':'s') + ' together';
+    }
+    if(isToday){
+      const confettiKey = 'confetti_shown_'+m.id+'_'+todayKey;
+      if(!sessionStorage.getItem(confettiKey)){
+        sessionStorage.setItem(confettiKey, '1');
+        setTimeout(triggerConfetti, 300);
+      }
+    }
+    const card = document.createElement('div');
+    card.className = 'milestone-card';
+    const recurringTag = m.recurring ? '<span class="milestone-yearly-tag">🔁 Yearly</span>' : '';
+    card.innerHTML = `<div><div class="milestone-name">${escapeHtml(m.label)}${recurringTag}</div><div class="milestone-date">${formatDate(m.date)}</div></div><div style="display:flex;align-items:center;"><div class="milestone-count">${countText}</div><button class="milestone-remove" onclick="removeMilestone('${m.id}')" title="Remove">&times;</button></div>`;
+    wrap.appendChild(card);
+  });
+}
+
+/* ===================================================================
+   CALENDAR
+=================================================================== */
+const K_CALENDAR_EVENTS = 'us_journal_calendar_events';
+let calendarViewDate = new Date();
+let selectedCalendarDate = null;
+
+function formatTime12(t){
+  if(!t) return '';
+  const [h,m] = t.split(':').map(Number);
+  const period = h>=12 ? 'PM' : 'AM';
+  const h12 = h%12===0 ? 12 : h%12;
+  return `${h12}:${String(m).padStart(2,'0')} ${period}`;
+}
+function changeCalendarMonth(delta){
+  calendarViewDate = new Date(calendarViewDate.getFullYear(), calendarViewDate.getMonth()+delta, 1);
+  renderCalendar();
+}
+function goToCalendarToday(){
+  calendarViewDate = new Date();
+  selectedCalendarDate = new Date().toISOString().slice(0,10);
+  renderCalendar();
+}
+function selectCalendarDay(dateStr){
+  selectedCalendarDate = dateStr;
+  renderCalendar();
+}
+function addCalendarEvent(){
+  const title = document.getElementById('calEventTitle').value.trim();
+  const time = document.getElementById('calEventTime').value;
+  const note = document.getElementById('calEventNote').value.trim();
+  const msg = document.getElementById('calEventMsg');
+  if(!title){ msg.textContent = 'Give it a title first.'; return; }
+  const dateStr = selectedCalendarDate || new Date().toISOString().slice(0,10);
+  const list = loadJSON(K_CALENDAR_EVENTS, []);
+  list.push({ id:'ce'+Date.now(), date:dateStr, title, time, note, addedBy:getSession(), createdAt:Date.now() });
+  saveJSON(K_CALENDAR_EVENTS, list);
+  addLog(getSession(), 'Added "'+title+'" to the calendar');
+  renderCalendar();
+}
+function removeCalendarEvent(id){
+  saveJSON(K_CALENDAR_EVENTS, loadJSON(K_CALENDAR_EVENTS, []).filter(e=>e.id!==id));
+  renderCalendar();
+}
+function renderSelectedDayPanel(){
+  const panel = document.getElementById('calendarDayPanel');
+  if(!panel) return;
+  const dateStr = selectedCalendarDate || new Date().toISOString().slice(0,10);
+  const events = loadJSON(K_CALENDAR_EVENTS, [])
+    .filter(e=>e.date===dateStr)
+    .sort((a,b)=> (a.time||'99:99').localeCompare(b.time||'99:99'));
+  const d = new Date(dateStr+'T00:00:00');
+  let html = `<div class="cal-panel-date">${d.toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric', year:'numeric'})}</div>`;
+  if(events.length===0){
+    html += `<div class="cal-panel-empty">Nothing planned yet.</div>`;
+  } else {
+    events.forEach(ev=>{
+      html += `<div class="cal-event-item">
+        <div class="cal-event-item-top">
+          <div>
+            <div class="cal-event-title">${ev.time?`<span class="cal-event-time">${formatTime12(ev.time)}</span> `:''}${escapeHtml(ev.title)}</div>
+            ${ev.note?`<div class="cal-event-note">${escapeHtml(ev.note)}</div>`:''}
+            <div class="cal-event-meta">Added by ${escapeHtml(getDisplayName(ev.addedBy))}</div>
+          </div>
+          <button type="button" class="cal-event-remove" onclick="removeCalendarEvent('${ev.id}')" title="Remove">&times;</button>
+        </div>
+      </div>`;
+    });
+  }
+  html += `
+    <div class="cal-add-form">
+      <input type="text" id="calEventTitle" placeholder="Event or note title">
+      <input type="time" id="calEventTime">
+      <textarea id="calEventNote" placeholder="Any details (optional)" style="min-height:60px;"></textarea>
+      <button type="button" class="btn-primary" style="width:auto;padding:10px 20px;" onclick="addCalendarEvent()">Add to ${d.toLocaleDateString(undefined,{month:'short',day:'numeric'})}</button>
+      <span class="form-msg" id="calEventMsg"></span>
+    </div>`;
+  panel.innerHTML = html;
+}
+function renderCalendar(){
+  if(!selectedCalendarDate) selectedCalendarDate = new Date().toISOString().slice(0,10);
+  const year = calendarViewDate.getFullYear();
+  const month = calendarViewDate.getMonth();
+  const labelEl = document.getElementById('calendarMonthLabel');
+  if(!labelEl) return;
+  labelEl.textContent = calendarViewDate.toLocaleDateString(undefined,{month:'long', year:'numeric'});
+
+  const firstDay = new Date(year, month, 1);
+  const startWeekday = firstDay.getDay();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+  const events = loadJSON(K_CALENDAR_EVENTS, []);
+  const eventsByDate = {};
+  events.forEach(ev=>{
+    if(!eventsByDate[ev.date]) eventsByDate[ev.date] = [];
+    eventsByDate[ev.date].push(ev);
+  });
+
+  const todayStr = new Date().toISOString().slice(0,10);
+  const grid = document.getElementById('calendarGrid');
+  grid.innerHTML = '';
+
+  ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d=>{
+    const el = document.createElement('div');
+    el.className = 'cal-weekday';
+    el.textContent = d;
+    grid.appendChild(el);
+  });
+
+  for(let i=startWeekday-1; i>=0; i--){
+    const dayNum = daysInPrevMonth - i;
+    const el = document.createElement('div');
+    el.className = 'cal-day other-month';
+    el.innerHTML = `<span class="cal-day-num">${dayNum}</span>`;
+    grid.appendChild(el);
+  }
+
+  for(let d=1; d<=daysInMonth; d++){
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dayEvents = eventsByDate[dateStr] || [];
+    const el = document.createElement('div');
+    el.className = 'cal-day' + (dateStr===todayStr?' today':'') + (dateStr===selectedCalendarDate?' selected':'');
+    let chipsHtml = '';
+    dayEvents.slice(0,2).forEach(ev=>{ chipsHtml += `<div class="cal-event-chip">${escapeHtml(ev.title)}</div>`; });
+    if(dayEvents.length>2) chipsHtml += `<div class="cal-event-more">+${dayEvents.length-2} more</div>`;
+    el.innerHTML = `<span class="cal-day-num">${d}</span>${chipsHtml}`;
+    el.addEventListener('click', ()=> selectCalendarDay(dateStr));
+    grid.appendChild(el);
+  }
+
+  const totalCells = startWeekday + daysInMonth;
+  const remaining = (7 - (totalCells % 7)) % 7;
+  for(let d=1; d<=remaining; d++){
+    const el = document.createElement('div');
+    el.className = 'cal-day other-month';
+    el.innerHTML = `<span class="cal-day-num">${d}</span>`;
+    grid.appendChild(el);
+  }
+
+  renderSelectedDayPanel();
+}
+
+/* ===================================================================
+   ALL PHOTOS
+=================================================================== */
+function renderAllPhotos(){
+  const posts = loadJSON(K_POSTS, []);
+  const albums = loadJSON(K_ALBUMS, []);
+  const photos = [];
+  posts.forEach(p=>{
+    if(p.photoCanvas && p.photoCanvas.photos){
+      p.photoCanvas.photos.forEach(ph=> photos.push({ dataUrl: ph.dataUrl, type: ph.type||'image', title: p.title, date: p.date, createdAt: p.createdAt, item: p }));
+    }
+  });
+  albums.forEach(a=>{
+    (a.pages||[]).forEach(pg=>{
+      (pg.photos||[]).forEach(ph=> photos.push({ dataUrl: ph.dataUrl, type: ph.type||'image', title: a.title, date: a.date, createdAt: a.createdAt, item: a }));
+    });
+  });
+  photos.sort((a,b)=> (b.createdAt||0) - (a.createdAt||0));
+  const grid = document.getElementById('allPhotosGrid');
+  grid.innerHTML = '';
+  if(photos.length===0){ grid.innerHTML = '<div class="milestone-empty">No photos yet — add some to a post or a photo album.</div>'; return; }
+  photos.forEach(ph=>{
+    const el = document.createElement('div');
+    el.className = 'ap-item';
+    const mediaHtml = ph.type === 'video'
+      ? `<video src="${ph.dataUrl}" muted></video><div class="thumb-play">&#9658;</div>`
+      : `<img src="${ph.dataUrl}" alt="">`;
+    el.innerHTML = `${mediaHtml}<div class="ap-label">${escapeHtml(ph.title)}</div>`;
+    el.addEventListener('click', ()=> openModal(ph.item));
+    grid.appendChild(el);
+  });
+}
+
+/* ===================================================================
+   LOVE LETTERS / TIME CAPSULES
+=================================================================== */
+const K_CAPSULES = 'us_journal_capsules';
+let openedCapsuleIds = [];
+function isCapsuleUnlocked(c){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const unlockDate = new Date(c.unlock+'T00:00:00');
+  return today >= unlockDate;
+}
+function addCapsule(){
+  const title = document.getElementById('capsuleTitle').value.trim();
+  const unlock = document.getElementById('capsuleUnlock').value;
+  const text = document.getElementById('capsuleText').value.trim();
+  const msg = document.getElementById('capsuleMsg');
+  if(!title || !unlock || !text){ msg.textContent = 'Fill in a title, unlock date, and your letter.'; return; }
+  const list = loadJSON(K_CAPSULES, []);
+  list.push({ id:'c'+Date.now(), title, unlock, text, author:getSession(), createdAt:Date.now() });
+  saveJSON(K_CAPSULES, list);
+  document.getElementById('capsuleTitle').value = '';
+  document.getElementById('capsuleUnlock').value = '';
+  document.getElementById('capsuleText').value = '';
+  msg.textContent = '';
+  addLog(getSession(), 'Sealed a love letter "'+title+'"');
+  renderCapsules();
+}
+function toggleCapsuleOpen(id){
+  const idx = openedCapsuleIds.indexOf(id);
+  if(idx>-1) openedCapsuleIds.splice(idx,1); else openedCapsuleIds.push(id);
+  renderCapsules();
+}
+function renderCapsules(){
+  const list = loadJSON(K_CAPSULES, []).slice().sort((a,b)=> new Date(a.unlock) - new Date(b.unlock));
+  const wrap = document.getElementById('capsuleList');
+  wrap.innerHTML = '';
+  if(list.length===0){ wrap.innerHTML = '<div class="capsule-empty">No letters sealed yet — write your first one above.</div>'; return; }
+  list.forEach(c=>{
+    const unlocked = isCapsuleUnlocked(c);
+    const card = document.createElement('div');
+    card.className = 'capsule-card';
+    if(!unlocked){
+      const diff = daysBetween(c.unlock);
+      card.innerHTML = `<div class="capsule-title">🔒 ${escapeHtml(c.title)}</div><div class="capsule-meta">Unlocks ${formatDate(c.unlock)}</div><div class="capsule-locked">Sealed for ${diff} more day${diff===1?'':'s'}.</div>`;
+    } else {
+      const isOpen = openedCapsuleIds.includes(c.id);
+      card.innerHTML = `<div class="capsule-title">💌 ${escapeHtml(c.title)}</div><div class="capsule-meta">Unlocked ${formatDate(c.unlock)} · written by ${escapeHtml(getDisplayName(c.author))}</div>` +
+        (isOpen ? `<div class="capsule-text">${escapeHtml(c.text)}</div>` : `<button type="button" class="btn-secondary capsule-open-btn" onclick="toggleCapsuleOpen('${c.id}')">Open letter</button>`);
+    }
+    wrap.appendChild(card);
+  });
+}
+
+/* ===================================================================
+   BUCKET LIST
+=================================================================== */
+const K_BUCKET = 'us_journal_bucketlist';
+let bucketCompletingId = null;
+let bucketCompletionPhoto = null;
+
+function addBucketItem(){
+  const title = document.getElementById('bucketTitleInput').value.trim();
+  const content = document.getElementById('bucketContentInput').value.trim();
+  const msg = document.getElementById('bucketFormMsg');
+  if(!title){ msg.textContent = 'Give it a title first.'; return; }
+  const list = loadJSON(K_BUCKET, []);
+  list.push({
+    id:'b'+Date.now(), title, content, addedBy:getSession(), createdAt:Date.now(),
+    done:false, completedBy:null, completedAt:null, completionPhoto:null, completionNote:null,
+    reactions:{}, notes:[]
+  });
+  saveJSON(K_BUCKET, list);
+  document.getElementById('bucketTitleInput').value = '';
+  document.getElementById('bucketContentInput').value = '';
+  msg.textContent = '';
+  addLog(getSession(), 'Added "'+title+'" to the bucket list');
+  renderBucketList();
+}
+function removeBucketItem(id){
+  saveJSON(K_BUCKET, loadJSON(K_BUCKET, []).filter(x=>x.id!==id));
+  renderBucketList();
+}
+function startCompleteBucketItem(id){
+  bucketCompletingId = id;
+  bucketCompletionPhoto = null;
+  renderBucketList();
+}
+function cancelCompleteBucketItem(){
+  bucketCompletingId = null;
+  bucketCompletionPhoto = null;
+  renderBucketList();
+}
+function handleBucketCompletionPhoto(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  readAndCompressImage(file, 900, 0.8).then(dataUrl=>{
+    bucketCompletionPhoto = dataUrl;
+    renderBucketList();
+  });
+  e.target.value = '';
+}
+function confirmCompleteBucketItem(id){
+  const noteInput = document.getElementById('bucketCompleteNote_'+id);
+  const note = noteInput ? noteInput.value.trim() : '';
+  const list = loadJSON(K_BUCKET, []);
+  const item = list.find(x=>x.id===id);
+  if(item){
+    item.done = true;
+    item.completedBy = getSession();
+    item.completedAt = Date.now();
+    item.completionPhoto = bucketCompletionPhoto || null;
+    item.completionNote = note || null;
+    saveJSON(K_BUCKET, list);
+    addLog(getSession(), 'Completed "'+item.title+'" from the bucket list');
+  }
+  bucketCompletingId = null;
+  bucketCompletionPhoto = null;
+  renderBucketList();
+}
+function reopenBucketItem(id){
+  const list = loadJSON(K_BUCKET, []);
+  const item = list.find(x=>x.id===id);
+  if(item){ item.done=false; item.completedBy=null; item.completedAt=null; item.completionPhoto=null; item.completionNote=null; }
+  saveJSON(K_BUCKET, list);
+  renderBucketList();
+}
+function toggleBucketReaction(id, emoji){
+  const list = loadJSON(K_BUCKET, []);
+  const item = list.find(x=>x.id===id);
+  if(!item) return;
+  if(!item.reactions) item.reactions = {};
+  if(!item.reactions[emoji]) item.reactions[emoji] = [];
+  const u = getSession();
+  const idx = item.reactions[emoji].indexOf(u);
+  if(idx>-1){
+    item.reactions[emoji].splice(idx,1);
+  } else {
+    item.reactions[emoji].push(u);
+    if(!item.reactionEvents) item.reactionEvents = [];
+    item.reactionEvents.push({ emoji, username:u, time:Date.now() });
+    if(item.reactionEvents.length>50) item.reactionEvents = item.reactionEvents.slice(-50);
+  }
+  saveJSON(K_BUCKET, list);
+  renderBucketList();
+  renderNotifBadge();
+}
+function addBucketNote(id){
+  const input = document.getElementById('bucketNoteInput_'+id);
+  const text = input.value.trim();
+  if(!text) return;
+  const list = loadJSON(K_BUCKET, []);
+  const item = list.find(x=>x.id===id);
+  if(!item) return;
+  if(!item.notes) item.notes = [];
+  item.notes.push({ username:getSession(), text, time:Date.now() });
+  saveJSON(K_BUCKET, list);
+  renderBucketList();
+}
+function renderBucketList(){
+  const list = loadJSON(K_BUCKET, []).slice().sort((a,b)=>{
+    if(a.done !== b.done) return a.done ? 1 : -1;
+    return (b.createdAt||0) - (a.createdAt||0);
+  });
+  const wrap = document.getElementById('bucketList');
+  wrap.innerHTML = '';
+  if(list.length===0){ wrap.innerHTML = '<div class="bucket-empty">Nothing on the list yet — add your first idea above.</div>'; return; }
+  list.forEach(item=>{
+    const card = document.createElement('div');
+    card.className = 'bucket-card' + (item.done ? ' done' : '');
+
+    let html = `<div class="bucket-card-top">
+      <div>
+        <div class="bucket-card-title${item.done?' done-text':''}">${escapeHtml(item.title)}</div>
+        <div class="bucket-card-meta">Added by ${escapeHtml(getDisplayName(item.addedBy))} · ${new Date(item.createdAt||0).toLocaleDateString()}</div>
+      </div>
+      ${item.done ? '<div class="bucket-done-badge">✓ Fulfilled</div>' : ''}
+    </div>`;
+
+    if(item.content){
+      html += `<div class="bucket-card-content">${escapeHtml(item.content)}</div>`;
+    }
+
+    if(item.done){
+      html += `<div class="bucket-complete-block">
+        <div class="bucket-complete-meta">✓ Completed by ${escapeHtml(getDisplayName(item.completedBy||''))} on ${new Date(item.completedAt||0).toLocaleDateString()}</div>
+        ${item.completionNote ? `<div class="bucket-complete-note">${escapeHtml(item.completionNote)}</div>` : ''}
+        ${item.completionPhoto ? `<img src="${item.completionPhoto}" alt="">` : ''}
+      </div>`;
+    }
+
+    if(!item.done && bucketCompletingId === item.id){
+      html += `<div class="bucket-complete-form">
+        <label class="photo-add-btn" style="margin-bottom:10px;">📷 Add a photo (optional)<input type="file" accept="image/*" onchange="handleBucketCompletionPhoto(event)"></label>
+        ${bucketCompletionPhoto ? `<img src="${bucketCompletionPhoto}" alt="" style="max-width:160px;border-radius:4px;display:block;margin-bottom:10px;">` : ''}
+        <input type="text" id="bucketCompleteNote_${item.id}" placeholder="Say something about it (optional)">
+        <div style="display:flex;gap:8px;">
+          <button type="button" class="btn-secondary" onclick="confirmCompleteBucketItem('${item.id}')">Confirm completed</button>
+          <button type="button" class="step-back" onclick="cancelCompleteBucketItem()">Cancel</button>
+        </div>
+      </div>`;
+    }
+
+    html += `<div class="bucket-actions-row">`;
+    if(!item.done && bucketCompletingId !== item.id){
+      html += `<button type="button" class="btn-secondary" onclick="startCompleteBucketItem('${item.id}')">Mark as done</button>`;
+    }
+    if(item.done){
+      html += `<button type="button" class="btn-secondary" onclick="reopenBucketItem('${item.id}')">Reopen</button>`;
+    }
+    html += `<button type="button" class="bucket-remove" onclick="removeBucketItem('${item.id}')">Remove</button>`;
+    html += `</div>`;
+
+    html += `<div class="reactions-row" style="margin-bottom:10px;">`;
+    REACTION_EMOJIS.forEach(emo=>{
+      const users = (item.reactions && item.reactions[emo]) || [];
+      const mine = users.includes(getSession());
+      html += `<button type="button" class="reaction-btn${mine?' active':''}" onclick="toggleBucketReaction('${item.id}','${emo}')">${emo} ${users.length}</button>`;
+    });
+    html += `</div>`;
+
+    const notes = item.notes || [];
+    html += `<div class="modal-notes-list" style="max-height:none;overflow:visible;margin-bottom:8px;">`;
+    if(notes.length===0){
+      html += `<div class="notes-empty">No notes yet.</div>`;
+    } else {
+      notes.forEach(n=>{
+        const d = new Date(n.time);
+        html += `<div class="note-item"><div class="note-head"><b>${getAvatarHtml(n.username,15)} ${escapeHtml(getDisplayName(n.username))}</b><span>${d.toLocaleDateString()}</span></div><div class="note-text">${escapeHtml(n.text)}</div></div>`;
+      });
+    }
+    html += `</div>`;
+    html += `<div class="modal-notes-add"><input type="text" id="bucketNoteInput_${item.id}" placeholder="Leave a note..." onkeydown="if(event.key==='Enter')addBucketNote('${item.id}')"><button type="button" class="btn-secondary" onclick="addBucketNote('${item.id}')">Send</button></div>`;
+
+    card.innerHTML = html;
+    wrap.appendChild(card);
+  });
+}
+
+/* ===================================================================
+   DAILY QUESTION
+=================================================================== */
+const K_DAILY = 'us_journal_daily_answers';
+const DAILY_PROMPTS = [
+  "What's a small moment from this week you don't want to forget?",
+  "What made you laugh together recently?",
+  "What's something you're grateful for about each other right now?",
+  "If we could teleport anywhere together today, where would we go?",
+  "What's a tiny habit of your partner's that you secretly love?",
+  "What's a memory from this year that stands out?",
+  "What's something you're both looking forward to?",
+  "Describe today in exactly five words.",
+  "What's a song that reminds you of \"us\" right now?",
+  "What's one thing you want to do together before the year ends?"
+];
+function getDayKey(){
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function getTodayPrompt(){
+  const d = new Date();
+  const start = new Date(d.getFullYear(), 0, 0);
+  const dayOfYear = Math.floor((d - start) / 86400000);
+  return DAILY_PROMPTS[dayOfYear % DAILY_PROMPTS.length];
+}
+function submitDailyAnswer(){
+  const input = document.getElementById('dailyAnswerInput');
+  const text = input.value.trim();
+  if(!text) return;
+  const all = loadJSON(K_DAILY, {});
+  const key = getDayKey();
+  if(!all[key]) all[key] = {};
+  all[key][getSession()] = text;
+  saveJSON(K_DAILY, all);
+  addLog(getSession(), "Answered today's question");
+  renderDailyQuestion();
+}
+function renderDailyQuestion(){
+  const key = getDayKey();
+  const all = loadJSON(K_DAILY, {});
+  const answers = all[key] || {};
+  const users = loadJSON(K_USERS, []).map(u=>u.username);
+  const card = document.getElementById('dailyQuestionCard');
+  const mine = answers[getSession()];
+  let html = `<div class="daily-question-text">${escapeHtml(getTodayPrompt())}</div>`;
+  users.forEach(u=>{
+    html += `<div class="daily-answer-block"><div class="daily-answer-user">${getAvatarHtml(u,16)} ${escapeHtml(getDisplayName(u))}</div>`;
+    html += answers[u] ? `<div class="daily-answer-text">${escapeHtml(answers[u])}</div>` : `<div class="daily-answer-empty">Hasn't answered yet.</div>`;
+    html += `</div>`;
+  });
+  if(!mine){
+    html += `<div class="daily-answer-input"><input type="text" id="dailyAnswerInput" placeholder="Your answer..." onkeydown="if(event.key==='Enter')submitDailyAnswer()"><button type="button" class="btn-secondary" onclick="submitDailyAnswer()">Send</button></div>`;
+  }
+  card.innerHTML = html;
+}
+
+/* ===================================================================
+   SETTINGS
+=================================================================== */
+const K_SETTINGS = 'us_journal_settings';
+function saveSettings(){
+  const coupleName = document.getElementById('settingsCoupleName').value.trim();
+  const about = document.getElementById('settingsAbout').value.trim();
+  saveJSON(K_SETTINGS, { coupleName, about });
+  document.getElementById('settingsMsg').textContent = 'Saved.';
+  setTimeout(()=>{ const el = document.getElementById('settingsMsg'); if(el) el.textContent=''; }, 2000);
+  applySettingsToBrand();
+}
+function renderSettings(){
+  const s = loadJSON(K_SETTINGS, { coupleName:'', about:'' });
+  document.getElementById('settingsCoupleName').value = s.coupleName || '';
+  document.getElementById('settingsAbout').value = s.about || '';
+  renderAppThemeRow();
+  renderProfileSection();
+  renderInvitePanel();
+}
+function applySettingsToBrand(){
+  const s = loadJSON(K_SETTINGS, { coupleName:'' });
+  if(s.coupleName){
+    document.querySelectorAll('.brand').forEach(b=> b.textContent = s.coupleName);
+  }
+}
+
+/* ===================================================================
+   MY PROFILE — nickname, avatar, password
+=================================================================== */
+const AVATAR_EMOJIS = ['🐰','🦊','🐻','🦋','🌸','🍑','🐨','🦉','🐢','🦢','🐝','🌙'];
+let profileSelectedAvatarType = 'emoji';
+let profileSelectedAvatarValue = AVATAR_EMOJIS[0];
+
+function getCurrentUserRecord(){
+  return loadJSON(K_USERS, []).find(u=>u.username===getSession());
+}
+function getDisplayName(username){
+  const u = loadJSON(K_USERS, []).find(x=>x.username===username);
+  return (u && u.nickname) ? u.nickname : username;
+}
+function getAvatarHtml(username, sizePx){
+  const size = sizePx || 26;
+  const u = loadJSON(K_USERS, []).find(x=>x.username===username);
+  if(u && u.avatarType==='photo' && u.avatarValue){
+    return `<img src="${u.avatarValue}" alt="" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;display:inline-block;vertical-align:middle;">`;
+  }
+  const emoji = (u && u.avatarType==='emoji' && u.avatarValue) ? u.avatarValue : '👤';
+  return `<span style="display:inline-flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;border-radius:50%;background:var(--paper-2);font-size:${Math.round(size*0.6)}px;vertical-align:middle;">${emoji}</span>`;
+}
+function renderAvatarEmojiRow(){
+  const row = document.getElementById('avatarEmojiRow');
+  if(!row) return;
+  row.innerHTML = '';
+  AVATAR_EMOJIS.forEach(emo=>{
+    const el = document.createElement('div');
+    el.className = 'preset-swatch' + (profileSelectedAvatarType==='emoji' && profileSelectedAvatarValue===emo ? ' active' : '');
+    el.innerHTML = `<div class="preset-chip" style="height:40px;display:flex;align-items:center;justify-content:center;font-size:20px;background:var(--paper);">${emo}</div>`;
+    el.addEventListener('click', ()=>{
+      profileSelectedAvatarType = 'emoji';
+      profileSelectedAvatarValue = emo;
+      renderAvatarEmojiRow();
+      renderAvatarPhotoThumb();
+    });
+    row.appendChild(el);
+  });
+}
+function handleAvatarPhotoUpload(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  readAndCompressImage(file, 300, 0.82).then(dataUrl=>{
+    profileSelectedAvatarType = 'photo';
+    profileSelectedAvatarValue = dataUrl;
+    renderAvatarEmojiRow();
+    renderAvatarPhotoThumb();
+  });
+  e.target.value = '';
+}
+function renderAvatarPhotoThumb(){
+  const wrap = document.getElementById('avatarPhotoThumb');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  if(profileSelectedAvatarType === 'photo'){
+    const el = document.createElement('div');
+    el.className = 'photo-thumb';
+    el.innerHTML = `<img src="${profileSelectedAvatarValue}" alt=""><button type="button" class="remove-x" onclick="clearAvatarPhoto(event)">&times;</button>`;
+    wrap.appendChild(el);
+  }
+}
+function clearAvatarPhoto(ev){
+  ev.stopPropagation();
+  profileSelectedAvatarType = 'emoji';
+  profileSelectedAvatarValue = AVATAR_EMOJIS[0];
+  renderAvatarEmojiRow();
+  renderAvatarPhotoThumb();
+}
+function renderProfileSection(){
+  const u = getCurrentUserRecord();
+  const nickInput = document.getElementById('profileNickname');
+  if(!nickInput) return;
+  nickInput.value = (u && u.nickname) || '';
+  profileSelectedAvatarType = (u && u.avatarType) || 'emoji';
+  profileSelectedAvatarValue = (u && u.avatarValue) || AVATAR_EMOJIS[0];
+  renderAvatarEmojiRow();
+  renderAvatarPhotoThumb();
+}
+function saveProfile(){
+  const nickname = document.getElementById('profileNickname').value.trim();
+  const users = loadJSON(K_USERS, []);
+  const u = users.find(x=>x.username===getSession());
+  const msg = document.getElementById('profileMsg');
+  if(!u){ msg.textContent = 'Something went wrong.'; return; }
+  u.nickname = nickname;
+  u.avatarType = profileSelectedAvatarType;
+  u.avatarValue = profileSelectedAvatarValue;
+  const ok = saveJSON(K_USERS, users);
+  if(!ok){ msg.textContent = 'Could not save — try a smaller photo.'; return; }
+  msg.textContent = 'Saved.';
+  setTimeout(()=>{ const el = document.getElementById('profileMsg'); if(el) el.textContent=''; }, 2000);
+  refreshDisplayNamesEverywhere();
+}
+function changePassword(){
+  const current = document.getElementById('pwCurrent').value;
+  const next = document.getElementById('pwNew').value;
+  const confirmVal = document.getElementById('pwConfirm').value;
+  const msg = document.getElementById('pwMsg');
+  const users = loadJSON(K_USERS, []);
+  const u = users.find(x=>x.username===getSession());
+  if(!u){ msg.textContent = 'Something went wrong.'; return; }
+  if(u.password !== current){ msg.textContent = 'Current password is incorrect.'; return; }
+  if(next.length < 4){ msg.textContent = 'New password should be at least 4 characters.'; return; }
+  if(next !== confirmVal){ msg.textContent = "New passwords don't match."; return; }
+  u.password = next;
+  saveJSON(K_USERS, users);
+  document.getElementById('pwCurrent').value = '';
+  document.getElementById('pwNew').value = '';
+  document.getElementById('pwConfirm').value = '';
+  msg.textContent = 'Password updated.';
+  addLog(getSession(), 'Changed their password');
+  setTimeout(()=>{ const el = document.getElementById('pwMsg'); if(el) el.textContent=''; }, 2500);
+}
+function refreshDisplayNamesEverywhere(){
+  const sidebarEl = document.getElementById('sidebarUsername');
+  if(sidebarEl) sidebarEl.innerHTML = getAvatarHtml(getSession(), 20) + ' ' + escapeHtml(getDisplayName(getSession()));
+  renderMemories();
+  renderActivity();
+  renderBucketList();
+  renderDailyQuestion();
+  if(currentModalItem) renderModalNotes(currentModalItem);
+}
+
+/* ===================================================================
+   APP THEME
+=================================================================== */
+const K_THEME = 'us_journal_theme';
+const APP_THEMES = [
+  { id:'rose-ink', label:'Rose & Ink', emoji:'🌹', vars:{
+    '--ink':'#211A24','--ink-2':'#2C232F','--ink-3':'#382D3D','--paper':'#F3ECDD','--paper-2':'#EAE0C8',
+    '--rose':'#C17B84','--rose-deep':'#9C5C68','--gold':'#C7A15A',
+    '--text-on-ink':'#EDE6E0','--text-muted-on-ink':'#A79CAA','--text-on-paper':'#2B2230','--text-muted-on-paper':'#6E6270' } },
+  { id:'lavender', label:'Lavender Dream', emoji:'💜', vars:{
+    '--ink':'#241B36','--ink-2':'#2E2244','--ink-3':'#3B2C57','--paper':'#F3EEFA','--paper-2':'#E4D9F5',
+    '--rose':'#9C7FC1','--rose-deep':'#7A5CA3','--gold':'#C9A6E0',
+    '--text-on-ink':'#EAE3F5','--text-muted-on-ink':'#AC9CC7','--text-on-paper':'#2E2244','--text-muted-on-paper':'#6E5C8A' } },
+  { id:'mint-peach', label:'Mint & Peach', emoji:'🍑', vars:{
+    '--ink':'#1F3A34','--ink-2':'#28473F','--ink-3':'#33574C','--paper':'#FBF3EA','--paper-2':'#F4E2D0',
+    '--rose':'#E6A085','--rose-deep':'#C97F60','--gold':'#7FB69E',
+    '--text-on-ink':'#E9F3EF','--text-muted-on-ink':'#9FC2B6','--text-on-paper':'#2C241E','--text-muted-on-paper':'#7A6A5C' } },
+  { id:'ocean', label:'Ocean Breeze', emoji:'🌊', vars:{
+    '--ink':'#0E2A38','--ink-2':'#153B4C','--ink-3':'#1D4C60','--paper':'#EAF4F6','--paper-2':'#D3E7EC',
+    '--rose':'#4E9BB5','--rose-deep':'#3A7E96','--gold':'#E0B15C',
+    '--text-on-ink':'#DFF0F5','--text-muted-on-ink':'#8FB9C9','--text-on-paper':'#123240','--text-muted-on-paper':'#4E7688' } },
+  { id:'sunset', label:'Sunset Glow', emoji:'🌇', vars:{
+    '--ink':'#331A1F','--ink-2':'#42232A','--ink-3':'#552D36','--paper':'#FBEEE0','--paper-2':'#F4D9BC',
+    '--rose':'#E08E45','--rose-deep':'#C1657A','--gold':'#F0B860',
+    '--text-on-ink':'#F5E5D8','--text-muted-on-ink':'#CFA091','--text-on-paper':'#3B241C','--text-muted-on-paper':'#8A6355' } },
+  { id:'midnight', label:'Midnight Bloom', emoji:'🌙', vars:{
+    '--ink':'#12101C','--ink-2':'#1B1830','--ink-3':'#262047','--paper':'#1E1B2E','--paper-2':'#2A2540',
+    '--rose':'#E85D9C','--rose-deep':'#C1417C','--gold':'#F2C14E',
+    '--text-on-ink':'#EDE6F5','--text-muted-on-ink':'#9C90B8','--text-on-paper':'#EDE6F5','--text-muted-on-paper':'#9C90B8' } }
+];
+const K_CUSTOM_THEME = 'us_journal_custom_theme';
+
+function hexToRgb(hex){
+  hex = hex.replace('#','');
+  if(hex.length===3) hex = hex.split('').map(c=>c+c).join('');
+  const num = parseInt(hex,16);
+  return { r:(num>>16)&255, g:(num>>8)&255, b:num&255 };
+}
+function rgbToHex(r,g,b){
+  return '#'+[r,g,b].map(v=> Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');
+}
+function shade(hex, amt){
+  const {r,g,b} = hexToRgb(hex);
+  const blend = (c)=> amt>=0 ? c + (255-c)*amt/100 : c*(1+amt/100);
+  return rgbToHex(blend(r), blend(g), blend(b));
+}
+function relativeLuminance(hex){
+  const {r,g,b} = hexToRgb(hex);
+  const srgb = [r,g,b].map(v=>{ v/=255; return v<=0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055,2.4); });
+  return 0.2126*srgb[0]+0.7152*srgb[1]+0.0722*srgb[2];
+}
+function generateCustomThemeVars(paper, ink, rose, gold){
+  const paperLight = relativeLuminance(paper) > 0.4;
+  const inkLight = relativeLuminance(ink) > 0.4;
+  return {
+    '--paper': paper,
+    '--paper-2': shade(paper, paperLight ? -8 : 12),
+    '--ink': ink,
+    '--ink-2': shade(ink, inkLight ? -10 : 10),
+    '--ink-3': shade(ink, inkLight ? -20 : 20),
+    '--rose': rose,
+    '--rose-deep': shade(rose, -18),
+    '--gold': gold,
+    '--text-on-paper': paperLight ? '#2B2230' : '#F3ECDD',
+    '--text-muted-on-paper': paperLight ? shade('#2B2230', 35) : shade('#F3ECDD', -25),
+    '--text-on-ink': inkLight ? '#2B2230' : '#EDE6E0',
+    '--text-muted-on-ink': inkLight ? shade('#2B2230', -25) : shade('#EDE6E0', -30)
+  };
+}
+function applyCustomThemeVars(c){
+  const vars = generateCustomThemeVars(c.paper, c.ink, c.rose, c.gold);
+  Object.entries(vars).forEach(([k,v])=> document.documentElement.style.setProperty(k, v));
+}
+function applyCustomThemeFromInputs(){
+  const existing = loadJSON(K_CUSTOM_THEME, {}) || {};
+  const c = {
+    ...existing,
+    paper: document.getElementById('customPaper').value,
+    ink: document.getElementById('customInk').value,
+    rose: document.getElementById('customRose').value,
+    gold: document.getElementById('customGold').value
+  };
+  saveJSON(K_CUSTOM_THEME, c);
+  localStorage.setItem(K_THEME, 'custom');
+  applyCustomThemeVars(c);
+  applyCustomBackground();
+  renderAppThemeRow();
+}
+function hexToRgbaString(hex, alpha){
+  const {r,g,b} = hexToRgb(hex);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+function clearCustomBackground(){
+  const mainEl = document.querySelector('.main');
+  const authLeftEl = document.querySelector('.auth-left');
+  if(mainEl) mainEl.style.backgroundImage = '';
+  if(authLeftEl) authLeftEl.style.backgroundImage = '';
+}
+function applyCustomBackground(){
+  const c = loadJSON(K_CUSTOM_THEME, null);
+  if(!c || !c.bgPhoto){ clearCustomBackground(); return; }
+  const mainEl = document.querySelector('.main');
+  const authLeftEl = document.querySelector('.auth-left');
+  const strength = (c.bgStrength != null ? c.bgStrength : 35) / 100;
+  const paperOverlayAlpha = Math.max(0.25, 1 - strength);
+  const inkOverlayAlpha = Math.max(0.45, 1 - strength);
+  if(mainEl){
+    mainEl.style.backgroundImage = `linear-gradient(${hexToRgbaString(c.paper,paperOverlayAlpha)}, ${hexToRgbaString(c.paper,paperOverlayAlpha)}), url('${c.bgPhoto}')`;
+    mainEl.style.backgroundSize = 'cover';
+    mainEl.style.backgroundPosition = 'center';
+    mainEl.style.backgroundAttachment = 'fixed';
+  }
+  if(authLeftEl){
+    authLeftEl.style.backgroundImage = `linear-gradient(${hexToRgbaString(c.ink,inkOverlayAlpha)}, ${hexToRgbaString(c.ink,inkOverlayAlpha)}), url('${c.bgPhoto}')`;
+    authLeftEl.style.backgroundSize = 'cover';
+    authLeftEl.style.backgroundPosition = 'center';
+  }
+}
+function handleCustomBgUpload(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  readAndCompressImage(file, 1400, 0.72).then(dataUrl=>{
+    const c = loadJSON(K_CUSTOM_THEME, {}) || {};
+    c.bgPhoto = dataUrl;
+    if(c.bgStrength == null) c.bgStrength = 35;
+    const ok = saveJSON(K_CUSTOM_THEME, c);
+    if(!ok){ alert("That photo is too large for this browser's storage — try a smaller image."); return; }
+    renderCustomBgThumb();
+    if(localStorage.getItem(K_THEME) === 'custom') applyCustomBackground();
+  });
+  e.target.value = '';
+}
+function removeCustomBg(){
+  const c = loadJSON(K_CUSTOM_THEME, {}) || {};
+  delete c.bgPhoto;
+  saveJSON(K_CUSTOM_THEME, c);
+  renderCustomBgThumb();
+  if(localStorage.getItem(K_THEME) === 'custom') applyCustomBackground();
+}
+function renderCustomBgThumb(){
+  const c = loadJSON(K_CUSTOM_THEME, null);
+  const wrap = document.getElementById('customBgThumb');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  if(c && c.bgPhoto){
+    const el = document.createElement('div');
+    el.className = 'photo-thumb';
+    el.innerHTML = `<img src="${c.bgPhoto}" alt=""><button type="button" class="remove-x" onclick="removeCustomBg()">&times;</button>`;
+    wrap.appendChild(el);
+  }
+  const slider = document.getElementById('customBgStrength');
+  if(slider) slider.value = (c && c.bgStrength != null) ? c.bgStrength : 35;
+}
+function previewCustomBgStrength(){
+  const c = loadJSON(K_CUSTOM_THEME, {}) || {};
+  c.bgStrength = parseInt(document.getElementById('customBgStrength').value, 10);
+  saveJSON(K_CUSTOM_THEME, c);
+  if(localStorage.getItem(K_THEME) === 'custom') applyCustomBackground();
+}
+function applyTheme(themeId){
+  const theme = APP_THEMES.find(t=>t.id===themeId) || APP_THEMES[0];
+  Object.entries(theme.vars).forEach(([k,v])=> document.documentElement.style.setProperty(k, v));
+  localStorage.setItem(K_THEME, themeId);
+  clearCustomBackground();
+}
+function loadSavedTheme(){
+  const themeId = localStorage.getItem(K_THEME) || 'rose-ink';
+  if(themeId === 'custom'){
+    const c = loadJSON(K_CUSTOM_THEME, null);
+    if(c){ applyCustomThemeVars(c); applyCustomBackground(); return; }
+  }
+  applyTheme(themeId === 'custom' ? 'rose-ink' : themeId);
+}
+function renderAppThemeRow(){
+  const row = document.getElementById('appThemeRow');
+  const panel = document.getElementById('customThemePanel');
+  if(!row) return;
+  row.innerHTML = '';
+  const current = localStorage.getItem(K_THEME) || 'rose-ink';
+  APP_THEMES.forEach(theme=>{
+    const el = document.createElement('div');
+    el.className = 'preset-swatch' + (theme.id===current ? ' active' : '');
+    el.innerHTML = `<div class="preset-chip" style="height:40px;background:linear-gradient(120deg, ${theme.vars['--paper']}, ${theme.vars['--rose']}, ${theme.vars['--ink']});"></div><div class="p-label">${theme.emoji} ${escapeHtml(theme.label)}</div>`;
+    el.addEventListener('click', ()=>{ applyTheme(theme.id); renderAppThemeRow(); });
+    row.appendChild(el);
+  });
+  const customColors = loadJSON(K_CUSTOM_THEME, null);
+  const chipBg = customColors
+    ? `linear-gradient(120deg, ${customColors.paper}, ${customColors.rose}, ${customColors.ink})`
+    : `linear-gradient(120deg, #F3ECDD, #C17B84, #7FB69E, #4E9BB5, #E85D9C)`;
+  const customEl = document.createElement('div');
+  customEl.className = 'preset-swatch' + (current==='custom' ? ' active' : '');
+  customEl.innerHTML = `<div class="preset-chip" style="height:40px;background:${chipBg};"></div><div class="p-label">🎨 Custom</div>`;
+  customEl.addEventListener('click', ()=>{
+    panel.style.display = 'block';
+    if(customColors){
+      document.getElementById('customPaper').value = customColors.paper;
+      document.getElementById('customInk').value = customColors.ink;
+      document.getElementById('customRose').value = customColors.rose;
+      document.getElementById('customGold').value = customColors.gold;
+    }
+    renderCustomBgThumb();
+  });
+  row.appendChild(customEl);
+  panel.style.display = current==='custom' ? 'block' : 'none';
+  if(current==='custom') renderCustomBgThumb();
+}
+
+/* ===================================================================
+   SIDEBAR AUTO-HIDE
+=================================================================== */
+let sidebarPinned = false;
+function updateSidebarPin(view){
+  sidebarPinned = (view === 'memories');
+  const sidebar = document.getElementById('mainSidebar');
+  const appScreen = document.getElementById('appScreen');
+  if(!sidebar) return;
+  if(sidebarPinned) sidebar.classList.add('visible');
+  else sidebar.classList.remove('visible');
+  if(appScreen) appScreen.classList.toggle('sidebar-pinned', sidebarPinned);
+}
+function initSidebarAutoHide(){
+  const sidebar = document.getElementById('mainSidebar');
+  const zone = document.getElementById('sidebarHoverZone');
+  if(!sidebar || !zone) return;
+  let hideTimer = null;
+  function show(){ clearTimeout(hideTimer); sidebar.classList.add('visible'); }
+  function scheduleHide(){ if(sidebarPinned) return; hideTimer = setTimeout(()=> sidebar.classList.remove('visible'), 250); }
+  zone.addEventListener('mouseenter', show);
+  sidebar.addEventListener('mouseenter', show);
+  zone.addEventListener('mouseleave', scheduleHide);
+  sidebar.addEventListener('mouseleave', scheduleHide);
+  // tap-to-open / tap-elsewhere-to-close, for touch devices without hover
+  zone.addEventListener('click', ()=> sidebar.classList.toggle('visible'));
+  document.querySelector('.main').addEventListener('click', ()=>{ if(!sidebarPinned) sidebar.classList.remove('visible'); });
+  sidebar.querySelectorAll('.nav-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ if(!sidebarPinned) sidebar.classList.remove('visible'); });
+  });
+}
+
+/* ===================================================================
+   NOTIFICATIONS
+=================================================================== */
+let notifPanelOpen = false;
+let _lastRenderedNotifs = [];
+
+function timeAgo(t){
+  const diff = Date.now() - t;
+  const mins = Math.floor(diff/60000);
+  if(mins < 1) return 'just now';
+  if(mins < 60) return mins+'m ago';
+  const hrs = Math.floor(mins/60);
+  if(hrs < 24) return hrs+'h ago';
+  const days = Math.floor(hrs/24);
+  if(days < 7) return days+'d ago';
+  return new Date(t).toLocaleDateString();
+}
+function getNotifLastSeen(){
+  return parseInt(localStorage.getItem('us_journal_notif_lastseen_'+getSession()) || '0', 10);
+}
+function markNotificationsSeen(){
+  localStorage.setItem('us_journal_notif_lastseen_'+getSession(), Date.now().toString());
+}
+function getNotifications(){
+  const me = getSession();
+  if(!me) return [];
+  const lastSeen = getNotifLastSeen();
+  const events = [];
+
+  const items = loadJSON(K_POSTS, []).concat(loadJSON(K_ALBUMS, []));
+  items.forEach(item=>{
+    (item.notes||[]).forEach(n=>{
+      if(n.username !== me){
+        events.push({ time:n.time, icon:'💬', text: `${getDisplayName(n.username)} left a note on "${item.title}"`, onClick: ()=> openModal(item) });
+      }
+    });
+    (item.reactionEvents||[]).forEach(ev=>{
+      if(ev.username !== me){
+        events.push({ time:ev.time, icon:ev.emoji, text: `${getDisplayName(ev.username)} reacted ${ev.emoji} to "${item.title}"`, onClick: ()=> openModal(item) });
+      }
+    });
+  });
+
+  const bucket = loadJSON(K_BUCKET, []);
+  bucket.forEach(b=>{
+    (b.notes||[]).forEach(n=>{
+      if(n.username !== me){
+        events.push({ time:n.time, icon:'💬', text: `${getDisplayName(n.username)} left a note on "${b.title}"`, onClick: ()=> switchView('bucketlist') });
+      }
+    });
+    (b.reactionEvents||[]).forEach(ev=>{
+      if(ev.username !== me){
+        events.push({ time:ev.time, icon:ev.emoji, text: `${getDisplayName(ev.username)} reacted ${ev.emoji} to "${b.title}"`, onClick: ()=> switchView('bucketlist') });
+      }
+    });
+    if(b.done && b.completedBy && b.completedBy !== me && b.completedAt){
+      events.push({ time:b.completedAt, icon:'✓', text: `${getDisplayName(b.completedBy)} completed "${b.title}"`, onClick: ()=> switchView('bucketlist') });
+    }
+  });
+
+  const capsules = loadJSON(K_CAPSULES, []);
+  capsules.forEach(c=>{
+    if(c.author !== me && isCapsuleUnlocked(c)){
+      const t = new Date(c.unlock+'T00:00:00').getTime();
+      events.push({ time:t, icon:'💌', text: `A love letter has unlocked: "${c.title}"`, onClick: ()=> switchView('capsules') });
+    }
+  });
+
+  events.sort((a,b)=> b.time - a.time);
+  events.forEach(e=> e.unread = e.time > lastSeen);
+
+  const dayKey = getDayKey();
+  const answers = (loadJSON(K_DAILY, {})[dayKey]) || {};
+  const partnerAnswered = Object.keys(answers).some(u=>u!==me);
+  const iAnswered = !!answers[me];
+  if(partnerAnswered && !iAnswered){
+    events.unshift({ time: Date.now(), icon:'❓', text: `Today's question is waiting — your partner already answered!`, onClick: ()=> switchView('daily'), unread:true });
+  }
+  return events;
+}
+function renderNotifBadge(){
+  const badge = document.getElementById('notifBadge');
+  if(!badge) return;
+  const unreadCount = getNotifications().filter(n=>n.unread).length;
+  if(unreadCount>0){ badge.style.display='inline-block'; badge.textContent = unreadCount>9 ? '9+' : unreadCount; }
+  else{ badge.style.display='none'; }
+}
+function renderNotifPanel(){
+  const notifs = getNotifications();
+  _lastRenderedNotifs = notifs;
+  const panel = document.getElementById('notifPanel');
+  if(!panel) return;
+  let html = `<div class="notif-panel-head">NOTIFICATIONS<button type="button" onclick="markAllNotifsRead()">Mark all read</button></div>`;
+  if(notifs.length===0){
+    html += `<div class="notif-empty">You're all caught up.</div>`;
+  } else {
+    notifs.slice(0,25).forEach((n,idx)=>{
+      html += `<div class="notif-item${n.unread?' unread':''}" onclick="handleNotifClick(${idx})"><div class="notif-icon">${n.icon}</div><div><div class="notif-text">${escapeHtml(n.text)}</div><div class="notif-time">${timeAgo(n.time)}</div></div></div>`;
+    });
+  }
+  panel.innerHTML = html;
+}
+function toggleNotifPanel(){
+  notifPanelOpen = !notifPanelOpen;
+  const panel = document.getElementById('notifPanel');
+  if(!panel) return;
+  panel.style.display = notifPanelOpen ? 'block' : 'none';
+  if(notifPanelOpen) renderNotifPanel();
+}
+function closeNotifPanel(){
+  notifPanelOpen = false;
+  const panel = document.getElementById('notifPanel');
+  if(panel) panel.style.display = 'none';
+}
+function handleNotifClick(idx){
+  const n = _lastRenderedNotifs[idx];
+  if(n && n.onClick) n.onClick();
+  closeNotifPanel();
+  const sidebar = document.getElementById('mainSidebar');
+  if(sidebar && !sidebarPinned) sidebar.classList.remove('visible');
+  renderNotifBadge();
+}
+function markAllNotifsRead(){
+  markNotificationsSeen();
+  renderNotifPanel();
+  renderNotifBadge();
+}
+document.addEventListener('click', (e)=>{
+  if(!notifPanelOpen) return;
+  const wrap = document.querySelector('.notif-bell-wrap');
+  if(wrap && !wrap.contains(e.target)) closeNotifPanel();
+});
+
+/* ===================================================================
+   INVITE YOUR PARTNER
+=================================================================== */
+const K_INVITES = 'us_journal_invites';
+let pendingInviteCode = null;
+
+function generateInviteCode(){
+  return (Math.random().toString(36).slice(2,6) + Math.random().toString(36).slice(2,6)).toUpperCase();
+}
+function getInviteLink(code){
+  return window.location.origin + window.location.pathname + '?invite=' + code;
+}
+function createInvite(){
+  const invites = loadJSON(K_INVITES, []);
+  invites.push({ code: generateInviteCode(), invitedBy: getSession(), createdAt: Date.now(), used:false, acceptedBy:null });
+  saveJSON(K_INVITES, invites);
+  addLog(getSession(), 'Generated a partner invite');
+  renderInvitePanel();
+}
+function copyInviteLink(link, btn){
+  const done = ()=>{
+    if(!btn) return;
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(()=>{ btn.textContent = orig; }, 1500);
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(link).then(done).catch(()=> alert('Could not copy — select the link and copy it manually.'));
+  } else {
+    alert('Copy not available here — select the link text and copy it manually.');
+  }
+}
+function renderInvitePanel(){
+  const wrap = document.getElementById('inviteStatus');
+  if(!wrap) return;
+  const invites = loadJSON(K_INVITES, []).filter(i=>i.invitedBy===getSession());
+  if(invites.length===0){ wrap.innerHTML = '<div class="theme-hint" style="margin-bottom:14px;">No invite generated yet.</div>'; return; }
+  const latest = invites[invites.length-1];
+  if(latest.used){
+    wrap.innerHTML = `<div class="invite-accepted">✓ ${escapeHtml(getDisplayName(latest.acceptedBy))} accepted your invite and joined!</div>`;
+    return;
+  }
+  const link = getInviteLink(latest.code);
+  wrap.innerHTML = `
+    <div class="invite-link-row">
+      <input type="text" readonly value="${link}" onclick="this.select()">
+      <button type="button" class="btn-secondary" onclick="copyInviteLink('${link}', this)">Copy</button>
+    </div>`;
+}
+function checkInviteFromUrl(){
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('invite');
+  if(!code) return;
+  const invites = loadJSON(K_INVITES, []);
+  const invite = invites.find(i=>i.code===code && !i.used);
+  if(!invite) return;
+  pendingInviteCode = code;
+  const banner = document.getElementById('inviteBanner');
+  const text = document.getElementById('inviteBannerText');
+  if(banner && text){
+    text.textContent = `💌 ${getDisplayName(invite.invitedBy)} invited you to join their journal! Register below to accept.`;
+    banner.style.display = 'block';
+  }
+  switchAuthTab('register');
+}
+
+/* ===================================================================
+   BOOT
+=================================================================== */
+document.addEventListener('DOMContentLoaded', ()=>{
+  loadSavedTheme();
+  seedIfNeeded();
+  resetStylePanel();
+  initSidebarAutoHide();
+  checkInviteFromUrl();
+  const writeEditor = document.getElementById('writeEditor');
+  writeEditor.addEventListener('mouseup', saveEditorSelection);
+  writeEditor.addEventListener('keyup', saveEditorSelection);
+  const session = getSession();
+  const users = loadJSON(K_USERS, []);
+  if(session && users.some(u=>u.username===session)){ enterApp(); }
+});
+</script>
+</body>
+</html>
