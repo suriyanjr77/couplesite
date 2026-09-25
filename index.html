@@ -1258,18 +1258,7 @@ function buildPostDoc(content, css){
     p{margin:0 0 1em;}
     ${css||''}
     
-  </style></head><body>${content||''}</body> <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-      const sb = window.supabase.createClient(
-        'https://byutuxmaidlsvixirmkv.supabase.co',
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ5dXR1eG1haWRsc3ZpeGlybWt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyOTE5MjMsImV4cCI6MjEwNTg2NzkyM30.TwFLgBjRorHpWEDmDjkJWrLZ3gHR0EgWyP9znr8byRM'
-      );
-    </script>
-    <script>
-      sb.from('couples').select('*').then(({ data, error }) => {
-        console.log('Supabase test:', data, error);
-      });
-    </script></html>`;
+  </style></head><body>${content||''}</body> </html>`;
 }
 
 let currentModalItem = null;
