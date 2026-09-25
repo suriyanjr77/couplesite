@@ -958,6 +958,7 @@
     <ul class="nav">
       <li><button class="nav-btn family-nav-btn active" data-view="memories" onclick="switchFamilyView('memories')"><span class="num">01</span> Memories</button></li>
       <li><button class="nav-btn family-nav-btn" data-view="newpost" onclick="switchFamilyView('newpost')"><span class="num">02</span> New post</button></li>
+      <li><button class="nav-btn family-nav-btn" data-view="capsules" onclick="switchFamilyView('capsules')"><span class="num">03</span> Time capsules</button></li>
     </ul>
     <div class="sidebar-foot">
       <div class="sidebar-user">Signed in as<b id="familySidebarUsername">—</b></div>
@@ -993,6 +994,18 @@
           <span class="form-msg" id="familyPostMsg"></span>
         </div>
       </div>
+    </div>
+
+    <div class="view" id="familyView-capsules" style="display:none;">
+      <div class="view-head"><div><h2>Time capsules</h2><div class="sub">Write something now that stays sealed until a date you choose — open on a birthday, a graduation, "when you turn 18," whenever matters.</div></div></div>
+      <div class="album-form" style="margin-bottom:30px;">
+        <div class="field"><label for="famCapsuleTitle">Title</label><input type="text" id="famCapsuleTitle" placeholder="e.g. Open on your 18th birthday"></div>
+        <div class="field"><label for="famCapsuleUnlock">Unlock date</label><input type="date" id="famCapsuleUnlock"></div>
+        <div class="field"><label for="famCapsuleText">Your message</label><textarea id="famCapsuleText" class="html-editor" style="min-height:160px;font-family:var(--sans);font-size:14px;" placeholder="Dear you..."></textarea></div>
+        <button type="button" class="btn-primary" style="width:auto;padding:11px 24px;" onclick="addFamilyCapsule()">Seal it</button>
+        <span class="form-msg" id="famCapsuleMsg"></span>
+      </div>
+      <div class="capsule-list" id="famCapsuleList"></div>
     </div>
   </div>
 </div>
@@ -3864,8 +3877,10 @@ let currentFamilyItem = null;
 function switchFamilyView(view){
   document.getElementById('familyView-memories').style.display = view==='memories' ? 'block' : 'none';
   document.getElementById('familyView-newpost').style.display = view==='newpost' ? 'block' : 'none';
+  document.getElementById('familyView-capsules').style.display = view==='capsules' ? 'block' : 'none';
   document.querySelectorAll('.family-nav-btn').forEach(b=> b.classList.toggle('active', b.getAttribute('data-view')===view));
   if(view==='memories') renderFamilyMemories();
+  if(view==='capsules') renderFamilyCapsules();
 }
 function renderFamilyMemories(){
   const q = (document.getElementById('familySearch').value||'').trim().toLowerCase();
@@ -3935,6 +3950,51 @@ function publishFamilyMemory(){
   msg.textContent = '';
   addLog(getSession(), 'Added a family memory "'+title+'"');
   switchFamilyView('memories');
+}
+
+/* ---------------- Family: Time Capsules (reuses isCapsuleUnlocked/daysBetween) ---------------- */
+const K_FAMILY_CAPSULES = 'us_journal_family_capsules';
+let openedFamilyCapsuleIds = [];
+function addFamilyCapsule(){
+  const title = document.getElementById('famCapsuleTitle').value.trim();
+  const unlock = document.getElementById('famCapsuleUnlock').value;
+  const text = document.getElementById('famCapsuleText').value.trim();
+  const msg = document.getElementById('famCapsuleMsg');
+  if(!title || !unlock || !text){ msg.textContent = 'Fill in a title, unlock date, and your message.'; return; }
+  const list = loadJSON(K_FAMILY_CAPSULES, []);
+  list.push({ id:'fc'+Date.now(), title, unlock, text, author:getSession(), createdAt:Date.now() });
+  saveJSON(K_FAMILY_CAPSULES, list);
+  document.getElementById('famCapsuleTitle').value = '';
+  document.getElementById('famCapsuleUnlock').value = '';
+  document.getElementById('famCapsuleText').value = '';
+  msg.textContent = '';
+  addLog(getSession(), 'Sealed a family time capsule "'+title+'"');
+  renderFamilyCapsules();
+}
+function toggleFamilyCapsuleOpen(id){
+  const idx = openedFamilyCapsuleIds.indexOf(id);
+  if(idx>-1) openedFamilyCapsuleIds.splice(idx,1); else openedFamilyCapsuleIds.push(id);
+  renderFamilyCapsules();
+}
+function renderFamilyCapsules(){
+  const list = loadJSON(K_FAMILY_CAPSULES, []).slice().sort((a,b)=> new Date(a.unlock) - new Date(b.unlock));
+  const wrap = document.getElementById('famCapsuleList');
+  wrap.innerHTML = '';
+  if(list.length===0){ wrap.innerHTML = '<div class="capsule-empty">No capsules sealed yet — write your first one above.</div>'; return; }
+  list.forEach(c=>{
+    const unlocked = isCapsuleUnlocked(c);
+    const card = document.createElement('div');
+    card.className = 'capsule-card';
+    if(!unlocked){
+      const diff = daysBetween(c.unlock);
+      card.innerHTML = `<div class="capsule-title">🔒 ${escapeHtml(c.title)}</div><div class="capsule-meta">Unlocks ${formatDate(c.unlock)}</div><div class="capsule-locked">Sealed for ${diff} more day${diff===1?'':'s'}.</div>`;
+    } else {
+      const isOpen = openedFamilyCapsuleIds.includes(c.id);
+      card.innerHTML = `<div class="capsule-title">💌 ${escapeHtml(c.title)}</div><div class="capsule-meta">Unlocked ${formatDate(c.unlock)} · written by ${escapeHtml(getDisplayName(c.author))}</div>` +
+        (isOpen ? `<div class="capsule-text">${escapeHtml(c.text)}</div>` : `<button type="button" class="btn-secondary capsule-open-btn" onclick="toggleFamilyCapsuleOpen('${c.id}')">Open</button>`);
+    }
+    wrap.appendChild(card);
+  });
 }
 
 /* ===================================================================
