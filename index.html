@@ -12,6 +12,7 @@
     --ink:#211A24; --ink-2:#2C232F; --ink-3:#382D3D;
     --paper:#F3ECDD; --paper-2:#EAE0C8;
     --rose:#C17B84; --rose-deep:#9C5C68; --gold:#C7A15A;
+    --amber:#B98A3E; --amber-deep:#8C6A2E;
     --text-on-ink:#EDE6E0; --text-muted-on-ink:#A79CAA;
     --text-on-paper:#2B2230; --text-muted-on-paper:#6E6270;
     --serif:'Fraunces',Georgia,'Iowan Old Style',serif;
@@ -57,7 +58,42 @@
   .invite-accepted{background:#EAF6EE;border:1px solid #7FB69E;border-radius:6px;padding:10px 14px;font-size:13px;color:#2F6B4F;font-weight:600;margin-bottom:10px;}
   .auth-hint b{color:var(--text-on-paper);}
 
+  /* ---------- SPACE PICKER ---------- */
+  #pickerScreen{display:none;min-height:100vh;position:relative;overflow:hidden;background:var(--ink);}
+  .picker-brand{position:absolute;top:38px;left:50%;transform:translateX(-50%);z-index:5;font-family:var(--serif);font-style:italic;font-weight:600;font-size:24px;color:var(--paper);text-shadow:0 2px 12px rgba(0,0,0,.5);pointer-events:none;}
+  .picker-sub{position:absolute;top:78px;left:50%;transform:translateX(-50%);z-index:5;color:var(--text-muted-on-ink);font-size:13px;text-shadow:0 2px 8px rgba(0,0,0,.5);pointer-events:none;}
+  .split-panel{flex:1;min-width:0;position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;transition:flex-grow .55s cubic-bezier(.4,0,.2,1), filter .5s ease;}
+  .split-panel.partner{background:radial-gradient(ellipse at 35% 30%, rgba(193,123,132,.4), transparent 62%),radial-gradient(ellipse at 70% 85%, rgba(156,92,104,.22), transparent 55%),var(--ink);}
+  .split-panel.family{background:radial-gradient(ellipse at 65% 30%, rgba(185,138,62,.4), transparent 62%),radial-gradient(ellipse at 30% 85%, rgba(140,106,46,.22), transparent 55%),var(--ink);}
+  #pickerScreen.hover-partner .split-panel.family{flex-grow:.6;filter:brightness(.45) saturate(.6);}
+  #pickerScreen.hover-family .split-panel.partner{flex-grow:.6;filter:brightness(.45) saturate(.6);}
+  #pickerScreen.hover-partner .split-panel.partner{flex-grow:1.7;}
+  #pickerScreen.hover-family .split-panel.family{flex-grow:1.7;}
+  .split-divider{position:absolute;top:0;bottom:0;left:50%;width:1px;background:rgba(255,255,255,.12);z-index:3;pointer-events:none;}
+  .split-panel-content{position:relative;text-align:center;padding:0 30px;transition:transform .5s cubic-bezier(.4,0,.2,1);}
+  .split-panel:hover .split-panel-content{transform:scale(1.1);}
+  .space-icon{font-size:52px;margin-bottom:16px;filter:drop-shadow(0 8px 20px rgba(0,0,0,.4));}
+  .space-title{font-family:var(--serif);font-size:30px;font-weight:500;color:var(--text-on-ink);margin-bottom:8px;}
+  .space-desc{font-size:13.5px;color:var(--text-muted-on-ink);line-height:1.55;margin-bottom:16px;max-width:26ch;margin-left:auto;margin-right:auto;}
+  .space-stat{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;}
+  .split-panel.partner .space-stat{color:var(--rose);}
+  .split-panel.family .space-stat{color:var(--amber);}
+  .picker-signout{position:absolute;bottom:34px;left:50%;transform:translateX(-50%);z-index:5;background:none;border:1px solid rgba(255,255,255,.25);color:var(--text-on-ink);border-radius:20px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;}
+  .picker-signout:hover{border-color:var(--gold);color:var(--gold);}
+  .space-back-btn{background:none;border:none;color:var(--text-muted-on-ink);font-size:12px;font-weight:600;cursor:pointer;padding:0;margin-bottom:20px;text-align:left;}
+  .space-back-btn:hover{color:var(--paper);}
+  @media (max-width:860px){
+    #pickerScreen{flex-direction:column;}
+    #pickerScreen.hover-partner .split-panel.partner,#pickerScreen.hover-family .split-panel.family{flex-grow:1;}
+    #pickerScreen.hover-partner .split-panel.family,#pickerScreen.hover-family .split-panel.partner{flex-grow:1;filter:none;}
+    .split-divider{top:50%;bottom:auto;left:0;right:0;width:auto;height:1px;}
+  }
+
   /* ---------- APP SHELL ---------- */
+  #familySpace{display:none;min-height:100vh;grid-template-columns:230px 1fr;}
+  #familySpace.open{display:grid;}
+  .family-sidebar{background:var(--ink);padding:28px 20px;display:flex;flex-direction:column;}
+  .family-sidebar .brand{margin-bottom:24px;}
   #appScreen{display:none;min-height:100vh;}
   .sidebar-hover-zone{position:fixed;top:0;left:0;width:14px;height:100vh;z-index:49;background:linear-gradient(to right, rgba(193,123,132,.4), transparent);cursor:pointer;}
   .sidebar{
@@ -471,10 +507,35 @@
   </div>
 </div>
 
-<!-- ================= APP SHELL ================= -->
+<!-- ================= SPACE PICKER ================= -->
+<div id="pickerScreen">
+  <div class="picker-brand">Us.</div>
+  <div class="picker-sub">Which one are we visiting today?</div>
+  <div class="split-panel partner" data-type="partner" onclick="enterPartnerSpace()">
+    <div class="split-panel-content">
+      <div class="space-icon">💕</div>
+      <div class="space-title">Partner</div>
+      <div class="space-desc">Just the two of you — memories, letters, the little things worth keeping.</div>
+      <div class="space-stat" id="partnerStat">0 memories</div>
+    </div>
+  </div>
+  <div class="split-divider"></div>
+  <div class="split-panel family" data-type="family" onclick="enterFamilySpace()">
+    <div class="split-panel-content">
+      <div class="space-icon">👨‍👩‍👧‍👦</div>
+      <div class="space-title">Family</div>
+      <div class="space-desc">Everyone else who matters — birthdays, gatherings, the whole story.</div>
+      <div class="space-stat" id="familyStat">0 memories</div>
+    </div>
+  </div>
+  <button class="picker-signout" onclick="handleLogout()">Sign out</button>
+</div>
+
+<!-- ================= APP SHELL (Partner space — unchanged) ================= -->
 <div id="appScreen">
   <div class="sidebar-hover-zone" id="sidebarHoverZone" title="Hover for menu"></div>
   <div class="sidebar" id="mainSidebar">
+    <button class="space-back-btn" onclick="goToPicker()">&larr; All spaces</button>
     <div class="brand" onclick="switchView('memories')" style="cursor:pointer;" title="Go to Memories">Us.</div>
     <div class="notif-bell-wrap">
       <button type="button" class="notif-bell-btn" onclick="toggleNotifPanel()">
@@ -889,6 +950,63 @@
   </div>
 </div>
 
+<!-- ================= FAMILY SPACE (first cut — same shape as Partner, will grow feature-by-feature) ================= -->
+<div id="familySpace" style="display:none;">
+  <div class="family-sidebar">
+    <button class="space-back-btn" onclick="goToPicker()">&larr; All spaces</button>
+    <div class="brand" style="color:var(--amber);">👨‍👩‍👧‍👦 Family</div>
+    <ul class="nav">
+      <li><button class="nav-btn family-nav-btn active" data-view="memories" onclick="switchFamilyView('memories')"><span class="num">01</span> Memories</button></li>
+      <li><button class="nav-btn family-nav-btn" data-view="newpost" onclick="switchFamilyView('newpost')"><span class="num">02</span> New post</button></li>
+    </ul>
+    <div class="sidebar-foot">
+      <div class="sidebar-user">Signed in as<b id="familySidebarUsername">—</b></div>
+      <button class="btn-logout" onclick="handleLogout()">Sign out</button>
+    </div>
+  </div>
+  <div class="main">
+    <div class="view" id="familyView-memories">
+      <div class="view-head">
+        <div><h2>Family Memories</h2><div class="sub">Everyone in the family, in one place.</div></div>
+      </div>
+      <input type="text" class="mem-search" id="familySearch" placeholder="Search by title..." oninput="renderFamilyMemories()">
+      <div class="memories-grid" id="familyGrid"></div>
+    </div>
+    <div class="view" id="familyView-newpost" style="display:none;">
+      <div class="view-head"><div><h2>New family memory</h2></div></div>
+      <div class="post-form" style="max-width:640px;">
+        <div class="post-fields">
+          <div class="field"><label for="familyPostTitle">Title</label><input type="text" id="familyPostTitle"></div>
+          <div class="field"><label for="familyPostDate">Date</label><input type="date" id="familyPostDate"></div>
+          <div class="field">
+            <label>Content</label>
+            <div class="write-editor" id="familyWriteArea" contenteditable="true" data-placeholder="What's a moment from the family you want to keep?"></div>
+          </div>
+          <div class="photo-field">
+            <label>Photos</label>
+            <label class="photo-add-btn">📷 Add photo(s)<input type="file" accept="image/*" multiple onchange="handleFamilyPhotoUpload(event)"></label>
+            <div class="photo-thumbs" id="familyPhotoThumbs"></div>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-primary" style="width:auto;padding:11px 26px;" onclick="publishFamilyMemory()">Publish</button>
+          <span class="form-msg" id="familyPostMsg"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FAMILY MODAL -->
+<div class="modal-overlay" id="familyModalOverlay" onclick="if(event.target===this)closeFamilyModal()">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-head-text"><div class="modal-date" id="familyModalDate"></div><div class="modal-title" id="familyModalTitle"></div></div>
+      <button class="modal-close" onclick="closeFamilyModal()">&times;</button>
+    </div>
+    <div class="modal-frame-wrap" style="padding:20px 22px;" id="familyModalBody"></div>
+  </div>
+</div>
 
 <!-- MODAL -->
 <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)requestCloseModal()">
@@ -1079,6 +1197,8 @@ async function handleLogout(){
   await sb.auth.signOut();
   currentUserId = null; currentUsername = null; currentCoupleId = null; currentIsAdmin = false;
   document.getElementById('appScreen').style.display='none';
+  document.getElementById('pickerScreen').style.display='none';
+  document.getElementById('familySpace').classList.remove('open');
   document.getElementById('authScreen').style.display='grid';
   document.getElementById('loginForm').reset();
   switchAuthTab('login');
@@ -1090,8 +1210,9 @@ async function handleLogout(){
 async function enterApp(){
   await loadCurrentProfile();
   document.getElementById('authScreen').style.display='none';
-  document.getElementById('appScreen').style.display='block';
   document.getElementById('sidebarUsername').innerHTML = getAvatarHtml(getSession(), 20) + ' ' + escapeHtml(getDisplayName(getSession()));
+  const familySidebarUser = document.getElementById('familySidebarUsername');
+  if(familySidebarUser) familySidebarUser.innerHTML = getAvatarHtml(getSession(), 20) + ' ' + escapeHtml(getDisplayName(getSession()));
   const adminNav = document.getElementById('adminNavItem');
   if(adminNav) adminNav.style.display = currentIsAdmin ? 'block' : 'none';
   const today = new Date();
@@ -1099,9 +1220,43 @@ async function enterApp(){
   document.getElementById('postDate').value = today.toISOString().slice(0,10);
   document.getElementById('albumDate').value = today.toISOString().slice(0,10);
   applySettingsToBrand();
+  goToPicker();
+}
+function goToPicker(){
+  document.getElementById('appScreen').style.display='none';
+  document.getElementById('familySpace').classList.remove('open');
+  document.getElementById('pickerScreen').style.display='flex';
+  const partnerCount = loadJSON(K_POSTS, []).length + loadJSON(K_ALBUMS, []).length;
+  const familyCount = loadJSON(K_FAMILY_POSTS, []).length;
+  document.getElementById('partnerStat').textContent = partnerCount + (partnerCount===1?' memory':' memories');
+  document.getElementById('familyStat').textContent = familyCount + (familyCount===1?' memory':' memories');
+}
+function enterPartnerSpace(){
+  document.getElementById('pickerScreen').style.display='none';
+  document.getElementById('familySpace').classList.remove('open');
+  document.getElementById('appScreen').style.display='block';
   history.replaceState({ view:'memories' }, '', '#memories');
   switchView('memories');
   renderNotifBadge();
+}
+function enterFamilySpace(){
+  document.getElementById('pickerScreen').style.display='none';
+  document.getElementById('appScreen').style.display='none';
+  document.getElementById('familySpace').classList.add('open');
+  document.getElementById('familyPostDate').value = new Date().toISOString().slice(0,10);
+  switchFamilyView('memories');
+}
+function setupSplitHover(){
+  const screen = document.getElementById('pickerScreen');
+  document.querySelectorAll('.split-panel').forEach(panel=>{
+    panel.addEventListener('mouseenter', ()=>{
+      screen.classList.remove('hover-partner','hover-family');
+      screen.classList.add('hover-'+panel.dataset.type);
+    });
+    panel.addEventListener('mouseleave', ()=>{
+      screen.classList.remove('hover-partner','hover-family');
+    });
+  });
 }
 let suppressHistoryPush = false;
 let currentViewName = 'memories';
@@ -3700,6 +3855,89 @@ window.addEventListener('popstate', (e)=>{
 });
 
 /* ===================================================================
+   FAMILY SPACE (first cut — Memories + New Post, same pattern as Partner)
+=================================================================== */
+const K_FAMILY_POSTS = 'us_journal_family_posts';
+let familyPendingPhotos = [];
+let currentFamilyItem = null;
+
+function switchFamilyView(view){
+  document.getElementById('familyView-memories').style.display = view==='memories' ? 'block' : 'none';
+  document.getElementById('familyView-newpost').style.display = view==='newpost' ? 'block' : 'none';
+  document.querySelectorAll('.family-nav-btn').forEach(b=> b.classList.toggle('active', b.getAttribute('data-view')===view));
+  if(view==='memories') renderFamilyMemories();
+}
+function renderFamilyMemories(){
+  const q = (document.getElementById('familySearch').value||'').trim().toLowerCase();
+  let items = loadJSON(K_FAMILY_POSTS, []);
+  if(q) items = items.filter(m=>m.title.toLowerCase().includes(q));
+  items.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  const grid = document.getElementById('familyGrid');
+  grid.innerHTML='';
+  if(items.length===0){ grid.innerHTML = `<div class="mem-empty">${loadJSON(K_FAMILY_POSTS,[]).length===0?'Nothing here yet — write your first family memory.':'No matches.'}</div>`; return; }
+  items.forEach((m,i)=>{
+    const el = document.createElement('div');
+    el.className = 'mem-card';
+    const bg = m.photos && m.photos[0] ? `background-image:url('${m.photos[0]}');` : `background:linear-gradient(150deg, var(--amber), var(--ink));`;
+    el.innerHTML = `<div class="mem-thumb" style="${bg}">${m.photos&&m.photos[0]?'':escapeHtml(m.title.slice(0,1).toUpperCase())}</div>
+      <div class="mem-date">${formatDate(m.date)}</div>
+      <div class="mem-title">${escapeHtml(m.title)}</div>
+      <div class="mem-author" style="color:var(--amber-deep);">by ${escapeHtml(getDisplayName(m.author))}</div>`;
+    el.addEventListener('click', ()=> openFamilyMemory(m));
+    grid.appendChild(el);
+  });
+}
+function openFamilyMemory(m){
+  currentFamilyItem = m;
+  document.getElementById('familyModalTitle').textContent = m.title;
+  document.getElementById('familyModalDate').textContent = formatDate(m.date)+' · by '+getDisplayName(m.author);
+  const photosHtml = (m.photos||[]).map(p=>`<img src="${p}" alt="" style="max-width:100%;border-radius:4px;margin:10px 0;display:block;">`).join('');
+  document.getElementById('familyModalBody').innerHTML = (m.content||'') + photosHtml;
+  document.getElementById('familyModalOverlay').classList.add('open');
+}
+function closeFamilyModal(){
+  document.getElementById('familyModalOverlay').classList.remove('open');
+  currentFamilyItem = null;
+}
+function handleFamilyPhotoUpload(e){
+  const files = Array.from(e.target.files||[]);
+  Promise.all(files.map(f=> readAndCompressImage(f, 900, 0.8))).then(urls=>{
+    familyPendingPhotos.push(...urls);
+    renderFamilyPhotoThumbs();
+  });
+  e.target.value='';
+}
+function renderFamilyPhotoThumbs(){
+  const wrap = document.getElementById('familyPhotoThumbs');
+  wrap.innerHTML='';
+  familyPendingPhotos.forEach((url,i)=>{
+    const el = document.createElement('div');
+    el.className='photo-thumb';
+    el.innerHTML = `<img src="${url}" alt=""><button type="button" class="remove-x" onclick="removeFamilyPhoto(${i})">&times;</button>`;
+    wrap.appendChild(el);
+  });
+}
+function removeFamilyPhoto(i){ familyPendingPhotos.splice(i,1); renderFamilyPhotoThumbs(); }
+function publishFamilyMemory(){
+  const title = document.getElementById('familyPostTitle').value.trim();
+  const date = document.getElementById('familyPostDate').value;
+  const content = document.getElementById('familyWriteArea').innerHTML;
+  const msg = document.getElementById('familyPostMsg');
+  if(!title){ msg.textContent = 'Give it a title first.'; return; }
+  const list = loadJSON(K_FAMILY_POSTS, []);
+  list.push({ id:'fm'+Date.now(), title, date, content, photos: familyPendingPhotos.slice(), author:getSession(), createdAt:Date.now() });
+  const ok = saveJSON(K_FAMILY_POSTS, list);
+  if(!ok){ msg.textContent = "That's too much to store — try removing a photo."; return; }
+  document.getElementById('familyPostTitle').value = '';
+  document.getElementById('familyWriteArea').innerHTML = '';
+  familyPendingPhotos = [];
+  renderFamilyPhotoThumbs();
+  msg.textContent = '';
+  addLog(getSession(), 'Added a family memory "'+title+'"');
+  switchFamilyView('memories');
+}
+
+/* ===================================================================
    BOOT
 =================================================================== */
 document.addEventListener('DOMContentLoaded', ()=>{
@@ -3708,6 +3946,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
   resetStylePanel();
   initSidebarAutoHide();
   checkInviteFromUrl();
+  setupSplitHover();
   const writeEditor = document.getElementById('writeEditor');
   writeEditor.addEventListener('mouseup', saveEditorSelection);
   writeEditor.addEventListener('keyup', saveEditorSelection);
