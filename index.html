@@ -457,7 +457,6 @@
         <div class="field"><label for="loginPass">Password</label><input type="password" id="loginPass" autocomplete="current-password" required></div>
         <div class="auth-error" id="loginError"></div>
         <button type="submit" class="btn-primary">Sign in</button>
-        <div class="auth-hint">Test account — username <b>admin</b>, password <b>admin</b>.</div>
       </form>
       <form id="registerForm" onsubmit="return handleRegister(event)" style="display:none;">
         <div class="field"><label for="regUser">Username</label><input type="text" id="regUser" autocomplete="username" required></div>
@@ -466,7 +465,7 @@
         <div class="field"><label for="regPass2">Confirm password</label><input type="password" id="regPass2" autocomplete="new-password" required></div>
         <div class="auth-error" id="registerError"></div>
         <button type="submit" class="btn-primary">Create account</button>
-        <div class="auth-hint">Only the two of you should hold accounts here.</div>
+        <div class="auth-hint">Password needs 8+ characters, an uppercase letter, a lowercase letter, and a number. Only the two of you should hold accounts here.</div>
       </form>
     </div>
   </div>
@@ -496,6 +495,7 @@
       <li><button class="nav-btn" data-view="daily" onclick="switchView('daily')"><span class="num">10</span> Daily question</button></li>
       <li><button class="nav-btn" data-view="settings" onclick="switchView('settings')"><span class="num">11</span> Settings</button></li>
       <li><button class="nav-btn" data-view="activity" onclick="switchView('activity')"><span class="num">12</span> Activity logs</button></li>
+      <li id="adminNavItem" style="display:none;"><button class="nav-btn" data-view="admin" onclick="switchView('admin')"><span class="num">13</span> Admin</button></li>
     </ul>
     <div class="sidebar-foot">
       <button class="btn-logout" onclick="exportAllData()" style="margin-bottom:8px;">⬇ Export all data</button>
@@ -669,6 +669,12 @@
         <thead><tr><th>Who</th><th>Action</th><th>When</th></tr></thead>
         <tbody id="logTableBody"></tbody>
       </table>
+    </div>
+
+    <!-- ADMIN VIEW -->
+    <div class="view" id="view-admin" style="display:none;">
+      <div class="view-head"><div><h2>Admin</h2><div class="sub">Every couple signed up, for support &amp; oversight. Only visible to admin accounts.</div></div></div>
+      <div class="milestone-list" id="adminList"></div>
     </div>
 
     <!-- PHOTO ALBUM VIEW -->
@@ -957,9 +963,28 @@ function seedIfNeeded(){
   if(!albums){ saveJSON(K_ALBUMS, []); }
 }
 
-async function getSession(){
-  const { data } = await sb.auth.getUser();
-  return data.user ? data.user.id : null; }
+let currentUserId = null;
+let currentUsername = null;
+let currentCoupleId = null;
+let currentIsAdmin = false;
+
+function getSession(){ return currentUsername; }
+
+async function loadCurrentProfile(){
+  const { data: userData } = await sb.auth.getUser();
+  if(!userData || !userData.user){
+    currentUserId = null; currentUsername = null; currentCoupleId = null; currentIsAdmin = false;
+    return null;
+  }
+  currentUserId = userData.user.id;
+  const { data } = await sb.from('profiles').select('*').eq('id', currentUserId).single();
+  if(data){
+    currentUsername = data.username;
+    currentCoupleId = data.couple_id;
+    currentIsAdmin = !!data.is_admin;
+  }
+  return data;
+}
 function addLog(username, action){
   const logs = loadJSON(K_LOGS, []);
   logs.unshift({ username, action, time: Date.now() });
@@ -1006,7 +1031,7 @@ async function handleLogin(e){
   const password = document.getElementById('loginPass').value;
   const { error } = await sb.auth.signInWithPassword({ email, password });
   if(error){ document.getElementById('loginError').textContent = error.message; return false; }
-  enterApp();
+  await enterApp();
   return false;
 }
 async function handleRegister(e){
@@ -1017,19 +1042,42 @@ async function handleRegister(e){
   const password2 = document.getElementById('regPass2').value;
   const errEl = document.getElementById('registerError');
   if(password !== password2){ errEl.textContent = "Passwords don't match."; return false; }
-  if(password.length < 4){ errEl.textContent = 'Password should be at least 4 characters.'; return false; }
+
+  const pwCheck = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+  if(!pwCheck.test(password)){
+    errEl.textContent = 'Password needs at least 8 characters, with an uppercase letter, a lowercase letter, and a number.';
+    return false;
+  }
+
+  let coupleId = null;
+  if(pendingInviteCode){
+    const { data: invite } = await sb.from('invites').select('*').eq('code', pendingInviteCode).eq('used', false).single();
+    if(!invite){ errEl.textContent = 'That invite link has already been used or is invalid.'; return false; }
+    const { count } = await sb.from('profiles').select('*', { count:'exact', head:true }).eq('couple_id', invite.couple_id);
+    if(count >= 2){ errEl.textContent = 'This couple already has two people on it.'; return false; }
+    coupleId = invite.couple_id;
+  }
 
   const { data, error } = await sb.auth.signUp({ email, password });
   if(error){ errEl.textContent = error.message; return false; }
 
-  const { data: couple } = await sb.from('couples').insert({}).select().single();
-  await sb.from('profiles').insert({ id: data.user.id, couple_id: couple.id, username });
+  if(!coupleId){
+    const { data: couple } = await sb.from('couples').insert({}).select().single();
+    coupleId = couple.id;
+  }
+  await sb.from('profiles').insert({ id: data.user.id, couple_id: coupleId, username });
 
-  enterApp();
+  if(pendingInviteCode){
+    await sb.from('invites').update({ used:true, accepted_by: data.user.id }).eq('code', pendingInviteCode);
+    pendingInviteCode = null;
+  }
+
+  await enterApp();
   return false;
 }
 async function handleLogout(){
   await sb.auth.signOut();
+  currentUserId = null; currentUsername = null; currentCoupleId = null; currentIsAdmin = false;
   document.getElementById('appScreen').style.display='none';
   document.getElementById('authScreen').style.display='grid';
   document.getElementById('loginForm').reset();
@@ -1039,10 +1087,13 @@ async function handleLogout(){
 /* ===================================================================
    APP SHELL
 =================================================================== */
-function enterApp(){
+async function enterApp(){
+  await loadCurrentProfile();
   document.getElementById('authScreen').style.display='none';
   document.getElementById('appScreen').style.display='block';
   document.getElementById('sidebarUsername').innerHTML = getAvatarHtml(getSession(), 20) + ' ' + escapeHtml(getDisplayName(getSession()));
+  const adminNav = document.getElementById('adminNavItem');
+  if(adminNav) adminNav.style.display = currentIsAdmin ? 'block' : 'none';
   const today = new Date();
   document.getElementById('todayLabel').textContent = today.toLocaleDateString(undefined,{weekday:'long', year:'numeric', month:'long', day:'numeric'});
   document.getElementById('postDate').value = today.toISOString().slice(0,10);
@@ -1057,7 +1108,7 @@ let currentViewName = 'memories';
 
 function switchView(view){
   currentViewName = view;
-  ['memories','newpost','activity','album','timeline','milestones','calendar','allphotos','capsules','bucketlist','daily','settings'].forEach(v=>{
+  ['memories','newpost','activity','album','timeline','milestones','calendar','allphotos','capsules','bucketlist','daily','settings','admin'].forEach(v=>{
     document.getElementById('view-'+v).style.display = v===view ? 'block' : 'none';
   });
   document.querySelectorAll('.nav-btn').forEach(b=> b.classList.toggle('active', b.getAttribute('data-view')===view));
@@ -1081,6 +1132,7 @@ function switchView(view){
   if(view==='bucketlist') renderBucketList();
   if(view==='daily') renderDailyQuestion();
   if(view==='settings') renderSettings();
+  if(view==='admin') renderAdminView();
 
   if(!suppressHistoryPush){
     const cur = history.state;
@@ -3537,7 +3589,6 @@ document.addEventListener('click', (e)=>{
 /* ===================================================================
    INVITE YOUR PARTNER
 =================================================================== */
-const K_INVITES = 'us_journal_invites';
 let pendingInviteCode = null;
 
 function generateInviteCode(){
@@ -3546,11 +3597,11 @@ function generateInviteCode(){
 function getInviteLink(code){
   return window.location.origin + window.location.pathname + '?invite=' + code;
 }
-function createInvite(){
-  const invites = loadJSON(K_INVITES, []);
-  invites.push({ code: generateInviteCode(), invitedBy: getSession(), createdAt: Date.now(), used:false, acceptedBy:null });
-  saveJSON(K_INVITES, invites);
-  addLog(getSession(), 'Generated a partner invite');
+async function createInvite(){
+  if(!currentCoupleId) return;
+  const code = generateInviteCode();
+  await sb.from('invites').insert({ couple_id: currentCoupleId, code, invited_by: currentUserId });
+  addLog(currentUsername, 'Generated a partner invite');
   renderInvitePanel();
 }
 function copyInviteLink(link, btn){
@@ -3566,14 +3617,19 @@ function copyInviteLink(link, btn){
     alert('Copy not available here — select the link text and copy it manually.');
   }
 }
-function renderInvitePanel(){
+async function renderInvitePanel(){
   const wrap = document.getElementById('inviteStatus');
-  if(!wrap) return;
-  const invites = loadJSON(K_INVITES, []).filter(i=>i.invitedBy===getSession());
-  if(invites.length===0){ wrap.innerHTML = '<div class="theme-hint" style="margin-bottom:14px;">No invite generated yet.</div>'; return; }
-  const latest = invites[invites.length-1];
+  if(!wrap || !currentUserId) return;
+  const { data: invites } = await sb.from('invites').select('*').eq('invited_by', currentUserId).order('created_at', { ascending:false });
+  if(!invites || invites.length===0){ wrap.innerHTML = '<div class="theme-hint" style="margin-bottom:14px;">No invite generated yet.</div>'; return; }
+  const latest = invites[0];
   if(latest.used){
-    wrap.innerHTML = `<div class="invite-accepted">✓ ${escapeHtml(getDisplayName(latest.acceptedBy))} accepted your invite and joined!</div>`;
+    let partnerName = 'Your partner';
+    if(latest.accepted_by){
+      const { data: partner } = await sb.from('profiles').select('username').eq('id', latest.accepted_by).single();
+      if(partner) partnerName = partner.username;
+    }
+    wrap.innerHTML = `<div class="invite-accepted">✓ ${escapeHtml(partnerName)} accepted your invite and joined!</div>`;
     return;
   }
   const link = getInviteLink(latest.code);
@@ -3583,21 +3639,43 @@ function renderInvitePanel(){
       <button type="button" class="btn-secondary" onclick="copyInviteLink('${link}', this)">Copy</button>
     </div>`;
 }
-function checkInviteFromUrl(){
+async function checkInviteFromUrl(){
   const params = new URLSearchParams(window.location.search);
   const code = params.get('invite');
   if(!code) return;
-  const invites = loadJSON(K_INVITES, []);
-  const invite = invites.find(i=>i.code===code && !i.used);
+  const { data: invite } = await sb.from('invites').select('*').eq('code', code).eq('used', false).single();
   if(!invite) return;
   pendingInviteCode = code;
+  let inviterName = 'Someone';
+  const { data: inviter } = await sb.from('profiles').select('username').eq('id', invite.invited_by).single();
+  if(inviter) inviterName = inviter.username;
   const banner = document.getElementById('inviteBanner');
   const text = document.getElementById('inviteBannerText');
   if(banner && text){
-    text.textContent = `💌 ${getDisplayName(invite.invitedBy)} invited you to join their journal! Register below to accept.`;
+    text.textContent = `💌 ${inviterName} invited you to join their journal! Register below to accept.`;
     banner.style.display = 'block';
   }
   switchAuthTab('register');
+}
+
+/* ===================================================================
+   ADMIN DASHBOARD
+=================================================================== */
+async function renderAdminView(){
+  const wrap = document.getElementById('adminList');
+  if(!wrap) return;
+  if(!currentIsAdmin){ wrap.innerHTML = '<div class="milestone-empty">Admin access only.</div>'; return; }
+  const { data: couples, error } = await sb.from('couples').select('*, profiles(username, created_at, is_admin)').order('created_at', { ascending:false });
+  if(error){ wrap.innerHTML = '<div class="milestone-empty">Could not load: '+escapeHtml(error.message)+'</div>'; return; }
+  wrap.innerHTML = '';
+  if(!couples || couples.length===0){ wrap.innerHTML = '<div class="milestone-empty">No couples yet.</div>'; return; }
+  couples.forEach(c=>{
+    const members = (c.profiles||[]).map(p=> escapeHtml(p.username) + (p.is_admin ? ' (admin)' : '')).join(', ') || '— nobody joined yet —';
+    const card = document.createElement('div');
+    card.className = 'milestone-card';
+    card.innerHTML = `<div><div class="milestone-name">${escapeHtml(c.couple_name || 'Unnamed couple')}</div><div class="milestone-date">${members}</div></div><div class="milestone-count">${new Date(c.created_at).toLocaleDateString()}</div>`;
+    wrap.appendChild(card);
+  });
 }
 
 /* ===================================================================
@@ -3633,9 +3711,9 @@ document.addEventListener('DOMContentLoaded', ()=>{
   const writeEditor = document.getElementById('writeEditor');
   writeEditor.addEventListener('mouseup', saveEditorSelection);
   writeEditor.addEventListener('keyup', saveEditorSelection);
-  const session = getSession();
-  const users = loadJSON(K_USERS, []);
-  if(session && users.some(u=>u.username===session)){ enterApp(); }
+  sb.auth.getSession().then(({ data })=>{
+    if(data.session){ enterApp(); }
+  });
 });
 </script>
 
