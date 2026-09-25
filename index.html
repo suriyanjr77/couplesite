@@ -453,7 +453,7 @@
         <button class="auth-tab" id="tabRegister" onclick="switchAuthTab('register')">Register</button>
       </div>
       <form id="loginForm" onsubmit="return handleLogin(event)">
-        <div class="field"><label for="loginUser">Username</label><input type="text" id="loginUser" autocomplete="username" required></div>
+        <div class="field"><label for="loginUser">Email</label><input type="email" id="loginUser" autocomplete="email" required></div>
         <div class="field"><label for="loginPass">Password</label><input type="password" id="loginPass" autocomplete="current-password" required></div>
         <div class="auth-error" id="loginError"></div>
         <button type="submit" class="btn-primary">Sign in</button>
@@ -957,9 +957,9 @@ function seedIfNeeded(){
   if(!albums){ saveJSON(K_ALBUMS, []); }
 }
 
-function getSession(){ return localStorage.getItem(K_SESSION); }
-function setSession(username){ localStorage.setItem(K_SESSION, username); }
-function clearSession(){ localStorage.removeItem(K_SESSION); }
+async function getSession(){
+  const { data } = await sb.auth.getUser();
+  return data.user ? data.user.id : null; }
 function addLog(username, action){
   const logs = loadJSON(K_LOGS, []);
   logs.unshift({ username, action, time: Date.now() });
@@ -1000,51 +1000,36 @@ function switchAuthTab(which){
   document.getElementById('loginError').textContent='';
   document.getElementById('registerError').textContent='';
 }
-function handleLogin(e){
+async function handleLogin(e){
   e.preventDefault();
-  const u = document.getElementById('loginUser').value.trim();
-  const p = document.getElementById('loginPass').value;
-  const users = loadJSON(K_USERS, []);
-  const match = users.find(x => x.username.toLowerCase() === u.toLowerCase() && x.password === p);
-  if(!match){ document.getElementById('loginError').textContent = "That username and password don't match."; return false; }
-  setSession(match.username);
-  addLog(match.username, 'Logged in');
+  const email = document.getElementById('loginUser').value.trim();
+  const password = document.getElementById('loginPass').value;
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  if(error){ document.getElementById('loginError').textContent = error.message; return false; }
   enterApp();
   return false;
 }
-function handleRegister(e){
+async function handleRegister(e){
   e.preventDefault();
-  const u = document.getElementById('regUser').value.trim();
+  const username = document.getElementById('regUser').value.trim();
   const email = document.getElementById('regEmail').value.trim();
-  const p = document.getElementById('regPass').value;
-  const p2 = document.getElementById('regPass2').value;
+  const password = document.getElementById('regPass').value;
+  const password2 = document.getElementById('regPass2').value;
   const errEl = document.getElementById('registerError');
-  if(p !== p2){ errEl.textContent = "Passwords don't match."; return false; }
-  if(p.length < 4){ errEl.textContent = 'Password should be at least 4 characters.'; return false; }
-  const users = loadJSON(K_USERS, []);
-  if(users.some(x => x.username.toLowerCase() === u.toLowerCase())){ errEl.textContent = 'That username is already taken.'; return false; }
-  users.push({ username:u, password:p, email, createdAt: Date.now() });
-  saveJSON(K_USERS, users);
-  if(pendingInviteCode){
-    const invites = loadJSON(K_INVITES, []);
-    const inv = invites.find(i=>i.code===pendingInviteCode);
-    if(inv){
-      inv.used = true;
-      inv.acceptedBy = u;
-      saveJSON(K_INVITES, invites);
-      addLog(u, 'Accepted an invite from '+getDisplayName(inv.invitedBy));
-    }
-    pendingInviteCode = null;
-  }
-  setSession(u);
-  addLog(u, 'Registered & logged in');
+  if(password !== password2){ errEl.textContent = "Passwords don't match."; return false; }
+  if(password.length < 4){ errEl.textContent = 'Password should be at least 4 characters.'; return false; }
+
+  const { data, error } = await sb.auth.signUp({ email, password });
+  if(error){ errEl.textContent = error.message; return false; }
+
+  const { data: couple } = await sb.from('couples').insert({}).select().single();
+  await sb.from('profiles').insert({ id: data.user.id, couple_id: couple.id, username });
+
   enterApp();
   return false;
 }
-function handleLogout(){
-  const u = getSession();
-  if(u) addLog(u, 'Logged out');
-  clearSession();
+async function handleLogout(){
+  await sb.auth.signOut();
   document.getElementById('appScreen').style.display='none';
   document.getElementById('authScreen').style.display='grid';
   document.getElementById('loginForm').reset();
@@ -3659,10 +3644,10 @@ document.addEventListener('DOMContentLoaded', ()=>{
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ5dXR1eG1haWRsc3ZpeGlybWt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyOTE5MjMsImV4cCI6MjEwNTg2NzkyM30.TwFLgBjRorHpWEDmDjkJWrLZ3gHR0EgWyP9znr8byRM'
   );
 </script>
-<script>
-  sb.from('couples').select('*').then(({ data, error }) => {
-    console.log('Supabase test:', data, error);
-  });
-</script>
+//<script>
+//  sb.from('couples').select('*').then(({ data, error }) => {
+//   console.log('Supabase test:', data, error);
+//  });
+//</script>
 </body>
 </html>
