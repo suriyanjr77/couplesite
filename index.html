@@ -82,6 +82,10 @@
   .picker-signout:hover{border-color:var(--gold);color:var(--gold);}
   .space-back-btn{background:none;border:none;color:var(--text-muted-on-ink);font-size:12px;font-weight:600;cursor:pointer;padding:0;margin-bottom:20px;text-align:left;}
   .space-back-btn:hover{color:var(--paper);}
+  .space-switch-btn{position:fixed;top:20px;right:24px;z-index:55;background:#fff;border:1px solid var(--paper-2);border-radius:20px;padding:9px 16px;font-size:12.5px;font-weight:600;cursor:pointer;box-shadow:var(--shadow);color:var(--text-on-paper);}
+  #appScreen .space-switch-btn:hover{border-color:var(--rose-deep);color:var(--rose-deep);}
+  #familySpace .space-switch-btn:hover{border-color:var(--amber-deep);color:var(--amber-deep);}
+  @media (max-width:860px){ .space-switch-btn{top:auto;bottom:16px;right:16px;} }
   @media (max-width:860px){
     #pickerScreen{flex-direction:column;}
     #pickerScreen.hover-partner .split-panel.partner,#pickerScreen.hover-family .split-panel.family{flex-grow:1;}
@@ -533,6 +537,7 @@
 
 <!-- ================= APP SHELL (Partner space — unchanged) ================= -->
 <div id="appScreen">
+  <button class="space-switch-btn" onclick="enterFamilySpace()">👨‍👩‍👧‍👦 Switch to Family</button>
   <div class="sidebar-hover-zone" id="sidebarHoverZone" title="Hover for menu"></div>
   <div class="sidebar" id="mainSidebar">
     <button class="space-back-btn" onclick="goToPicker()">&larr; All spaces</button>
@@ -951,7 +956,8 @@
 </div>
 
 <!-- ================= FAMILY SPACE (first cut — same shape as Partner, will grow feature-by-feature) ================= -->
-<div id="familySpace" style="display:none;">
+<div id="familySpace">
+  <button class="space-switch-btn" onclick="enterPartnerSpace()">💕 Switch to Partner</button>
   <div class="family-sidebar">
     <button class="space-back-btn" onclick="goToPicker()">&larr; All spaces</button>
     <div class="brand" style="color:var(--amber);">👨‍👩‍👧‍👦 Family</div>
